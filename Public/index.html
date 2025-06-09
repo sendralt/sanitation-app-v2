@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanitation Checklists</title>
+
+    <link rel="stylesheet" href="dhl-unified.css">
+    <script src="config.js"></script>
+    <script defer src="scripts.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-H+K76dXRKVW/A8d/k7UON48yEkoSnz6v2O/emt0W92P0=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <img src="dhl-logo.svg" alt="DHL Logo" class="logo">
+        <div class="user-info" id="user-nav-info">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </nav>
+
+    <div class="App page-container">
+        <h1>Warehouse Sanitation Checklists</h1>
+
+        <div class="auth-section" style="text-align: center; margin: 2rem 0; padding: 1rem; background-color: #f8f9fa; border-radius: 8px;">
+            <p style="margin-bottom: 1rem; color: #666;">Please log in to access the sanitation checklists</p>
+            <a href="/login-page" class="btn btn-primary" style="display: inline-block; padding: 12px 24px; background-color: #d40511; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                🔐 Login to Access Checklists
+            </a>
+        </div>
+
+        <ul id="landing-page-menu" class="action-list" style="display: none;">
+            <!-- Checklist links will be dynamically generated here after login -->
+        </ul>
+    </div>
+
+<script>
+  document.getElementById('submitBtn').addEventListener('click', function(event) {
+    event.preventDefault();
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+    const selected = Array.from(checkboxes).slice(0, Math.ceil(checkboxes.length * 0.1));
+    const selectedContainer = document.getElementById('selectedCheckboxes');
+    selectedContainer.innerHTML = '';
+    selected.forEach(checkbox => {
+      selectedContainer.innerHTML += '<p>' + checkbox.name + '</p>';
+    });
+  });
+</script>
+</body>
+</html>

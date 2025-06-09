@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Functionality Test</title>
+    <link rel="stylesheet" href="dhl-unified.css">
+    <script src="config.js"></script>
+    <script defer src="scripts.js"></script>
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .test-checkbox {
+            margin: 10px 0;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 3px;
+        }
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .status {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hidden scanner input (same as in checklist pages) -->
+    <input type="text" id="scannerInput" style="position: absolute; left: -9999px; top: -9999px;">
+    
+    <div class="App">
+        <header class="header">
+            <img src="dhl-logo.svg" alt="DHL Logo" class="logo">
+        </header>
+
+        <div class="test-container">
+            <h1>🔍 Scan Functionality Test Page</h1>
+            
+            <div class="instructions">
+                <h3>📋 How to Test Scanning:</h3>
+                <ol>
+                    <li><strong>Focus Check:</strong> The hidden scanner input should automatically have focus</li>
+                    <li><strong>Simple Test:</strong> Type "test1" and press Enter</li>
+                    <li><strong>Space Test:</strong> Type "test with spaces" and press Enter</li>
+                    <li><strong>Special Characters:</strong> Type "test-with-hyphens" and press Enter</li>
+                    <li><strong>Console:</strong> Open Developer Tools (F12) to see detailed logs</li>
+                </ol>
+                <p><strong>Expected Result:</strong> Checkboxes should toggle and show green highlight effect</p>
+            </div>
+
+            <div class="status" id="focusStatus">Scanner Ready</div>
+
+            <div class="test-section">
+                <h3>Simple IDs (should work perfectly)</h3>
+                <div class="test-checkbox">
+                    <input type="checkbox" id="test1" name="test1">
+                    <label for="test1">Test 1 - Simple ID</label>
+                    <code style="margin-left: 10px; color: #666;">Scan: "test1"</code>
+                </div>
+                <div class="test-checkbox">
+                    <input type="checkbox" id="test2" name="test2">
+                    <label for="test2">Test 2 - Simple ID</label>
+                    <code style="margin-left: 10px; color: #666;">Scan: "test2"</code>
+                </div>
+                <div class="test-checkbox">
+                    <input type="checkbox" id="A76" name="A76">
+                    <label for="A76">A76 - Real Checklist ID</label>
+                    <code style="margin-left: 10px; color: #666;">Scan: "A76"</code>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>IDs with Spaces (enhanced scanner should handle these)</h3>
+                <div class="test-checkbox">
+                    <input type="checkbox" id="test with spaces" name="test with spaces">
+                    <label for="test with spaces">Test with Spaces</label>
+                    <code style="margin-left: 10px; color: #666;">Scan: "test with spaces"</code>
+                </div>
+                <div class="test-checkbox">
+                    <input type="checkbox" id="South Walkway A West" name="South Walkway A West">
+                    <label for="South Walkway A West">South Walkway A West - Real ID</label>
+                    <code style="margin-left: 10px; color: #666;">Scan: "South Walkway A West"</code>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>IDs with Special Characters</h3>
+                <div class="test-checkbox">
+                    <input type="checkbox" id="test-with-hyphens" name="test-with-hyphens">
+                    <label for="test-with-hyphens">Test with Hyphens</label>
+                    <code style="margin-left: 10px; color: #666;">Scan: "test-with-hyphens"</code>
+                </div>
+                <div class="test-checkbox">
+                    <input type="checkbox" id="A-B West Transition" name="A-B West Transition">
+                    <label for="A-B West Transition">A-B West Transition - Real ID</label>
+                    <code style="margin-left: 10px; color: #666;">Scan: "A-B West Transition"</code>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>Error Testing</h3>
+                <p>Try scanning these non-existent IDs to test error handling:</p>
+                <ul>
+                    <li><code>"nonexistent"</code> - Should show error message</li>
+                    <li><code>"invalid-id"</code> - Should show error message</li>
+                    <li><code>""</code> (empty) - Should be ignored</li>
+                </ul>
+            </div>
+
+            <div class="test-section">
+                <h3>📊 Test Results</h3>
+                <div id="testResults">
+                    <p>Start scanning to see results...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Additional test functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const focusStatus = document.getElementById('focusStatus');
+            const testResults = document.getElementById('testResults');
+            const scannerInput = document.getElementById('scannerInput');
+            
+            // Monitor focus status
+            function updateFocusStatus() {
+                if (document.activeElement === scannerInput) {
+                    focusStatus.textContent = '✅ Scanner Focused';
+                    focusStatus.style.background = '#28a745';
+                } else {
+                    focusStatus.textContent = '⚠️ Scanner Not Focused';
+                    focusStatus.style.background = '#ffc107';
+                }
+            }
+            
+            // Check focus every second
+            setInterval(updateFocusStatus, 1000);
+            
+            // Track scan attempts
+            let scanCount = 0;
+            let successCount = 0;
+            
+            // Override the original scanner event to track results
+            if (scannerInput) {
+                scannerInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        scanCount++;
+                        const scannedValue = scannerInput.value.trim();
+                        
+                        setTimeout(() => {
+                            const targetCheckbox = document.getElementById(scannedValue) || 
+                                                 document.querySelector(`input[id="${scannedValue}"]`);
+                            
+                            if (targetCheckbox && targetCheckbox.type === 'checkbox') {
+                                successCount++;
+                            }
+                            
+                            testResults.innerHTML = `
+                                <p><strong>Scan Attempts:</strong> ${scanCount}</p>
+                                <p><strong>Successful Scans:</strong> ${successCount}</p>
+                                <p><strong>Success Rate:</strong> ${scanCount > 0 ? Math.round((successCount/scanCount)*100) : 0}%</p>
+                                <p><strong>Last Scanned:</strong> "${scannedValue}"</p>
+                            `;
+                        }, 100);
+                    }
+                });
+            }
+            
+            console.log('[Test Page] Scan test page loaded successfully');
+        });
+    </script>
+</body>
+</html>

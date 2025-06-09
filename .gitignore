@@ -1,0 +1,25 @@
+# Environment variables
+.env
+**/.env
+
+# Node dependencies
+node_modules/
+**/node_modules/
+**/package-lock.json
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Logs
+logs/
+*.log
+**/logs/
+
+# Data files
+backend/data/*
+.template.html
+.template_all.html
+.openindex.html
