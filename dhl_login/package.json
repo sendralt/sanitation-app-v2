@@ -1,0 +1,41 @@
+{
+  "name": "dhl_login",
+  "version": "1.0.2",
+  "main": "app.js",
+  "scripts": {
+    "sync-db": "node sync-db.js",
+    "start": "node app.js"
+  },
+  "keywords": [
+    "authentication",
+    "session management",
+    "frontend"
+  ],
+  "author": "Todd Sendral",
+  "license": "MIT",
+  "description": "Frontend authentication and session management for sanitation checklists app.",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "connect-flash": "^0.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-ejs-layouts": "^2.5.1",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "lusca": "^1.7.0",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7",
+    "validator": "^13.15.0"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.3"
+  }
+}

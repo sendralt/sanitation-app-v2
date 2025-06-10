@@ -1,0 +1,405 @@
+
+/* Delivery Font Definitions */
+@font-face {
+  font-family: 'Delivery';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/WOFF2/Delivery_W_Rg.woff2') format('woff2'),
+       url('../fonts/WOFF/Delivery_W_Rg.woff') format('woff');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Delivery';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../fonts/WOFF2/Delivery_W_Bd.woff2') format('woff2'),
+       url('../fonts/WOFF/Delivery_W_Bd.woff') format('woff');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Delivery';
+  font-style: italic;
+  font-weight: 400;
+  src: url('../fonts/WOFF2/Delivery_W_It.woff2') format('woff2'),
+       url('../fonts/WOFF/Delivery_W_It.woff') format('woff');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Delivery';
+  font-style: normal;
+  font-weight: 300;
+  src: url('../fonts/WOFF2/Delivery_W_Lt.woff2') format('woff2'),
+       url('../fonts/WOFF/Delivery_W_Lt.woff') format('woff');
+  font-display: swap;
+}
+
+body {
+  font-family: 'Delivery', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  margin: 0;
+  background: linear-gradient(to bottom, #FFCC00, white); /* Light grey background for the page */
+  color: #333333; /* Default text color */
+}
+
+.page-container { /* Generic container, can be used by login, create-user etc. */
+  max-width: 450px; /* Default max-width */
+  margin: 4rem auto;
+  padding: 2rem;
+  background-color: lightgoldenrodyellow; /* background for the content card */
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.login-container { /* Specific for login if different sizing is needed */
+  max-width: 450px; /* Narrower for login forms */
+  margin: 4rem auto; /* More vertical margin for centered feel */
+  margin-bottom: 11rem;
+  padding: 2.5rem;
+  background-color: lightgoldenrodyellow;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-container { /* For dashboard specific layouts */
+  max-width: 450px;
+  margin: 4rem auto;
+  margin-bottom: 11rem;
+  padding: 2.5rem;
+  background-color: lightgoldenrodyellow;;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.page-header, .dashboard-header, .login-header, .reset-header  { /* Common header styling */
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  /* border-bottom: 1px solid #D40511; */ /* Separator line */
+}
+
+.page-header .logo, .dashboard-header .logo, .login-header .logo, .reset-header .logo {
+  height: 50px; /* Adjust size as needed */
+  margin-right: 1.5rem;
+}
+
+.page-header h1, .dashboard-header h1, .login-header h1, .reset-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #D40511; /* DHL Red for the main heading */
+  margin: 0;
+}
+
+.login-header { /* Specific adjustments for login header if needed */
+  justify-content: center; /* Center logo and title in login */
+  flex-direction: column; /* Stack logo and title */
+}
+.login-header .logo {
+  margin-right: 0;
+  margin-bottom: 1rem;
+}
+
+
+.main-content .success-message {
+  font-size: 1.1rem;
+  color: #28a745; /* Green for success indication */
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #e9f7ef; /* Light green background for the message */
+  border-left: 4px solid #28a745; /* Accent border */
+  border-radius: 4px;
+}
+.main-content .success-message .emoji {
+  font-size: 1.2em; /* Make emoji slightly larger */
+  margin-left: 0.5em;
+}
+
+.action-list {
+  margin-bottom: 2rem;
+  list-style: none;
+  padding-left: 0;
+}
+
+/* Main content action list styling */
+.main-content .action-list li {
+  margin-bottom: 1rem; /* Consistent spacing between action buttons */
+}
+
+.main-content .action-list li:last-child {
+  margin-bottom: 0; /* Remove margin from last item to prevent extra space */
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%; /* Make buttons full width by default within forms/actions */
+  box-sizing: border-box;
+}
+
+.btn.btn-inline { /* Add this class if you need an inline button */
+    width: fit-content;
+}
+
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-primary {
+  background-color: #e6b800; /* DHL Yellow */
+  color: #333333; /* Dark text for good contrast on yellow */
+}
+
+.btn-primary:hover {
+  background-color: #b8040f;
+  color: white;
+}
+
+.btn-secondary {
+  background-color: #e6b800; /* DHL Red */
+  color: #333333; /* White text for good contrast on red */
+}
+
+.btn-secondary:hover {
+  background-color: #b8040f; /* Darker red on hover */
+  color: white;
+}
+
+.admin-actions {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #D40511; /* Separator line */
+}
+
+.admin-actions h2 {
+  font-size: 1.5rem;
+  color: #333333;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.admin-actions .action-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.admin-actions .action-list li {
+  margin-bottom: 1rem; /* Increased to match main content for consistency */
+}
+
+.admin-actions .action-list li:last-child {
+  margin-bottom: 0; /* Remove margin from last item to prevent extra space */
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 1.25rem; /* Slightly reduced margin for forms */
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="email"],
+.form-group input[type="checkbox"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.form-group input[type="checkbox"] {
+  width: auto; /* Checkboxes should not be full width */
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+.form-group .checkbox-label {
+    display: inline; /* Keep label next to checkbox */
+    font-weight: normal;
+}
+
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="email"]:focus {
+  border-color: #FFCC00; /* DHL Yellow for focus */
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.3);
+}
+
+.error-message, .flash-message { /* General purpose message styling */
+  color: #D40511; /* DHL Red for errors */
+  background-color: #fdecea; /* Light red background */
+  border: 1px solid #D40511;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  list-style: none; /* If it's a ul */
+}
+.flash-message.success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+.flash-message.info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+/* Basic styling for Bootstrap-like invalid feedback */
+.invalid-feedback {
+  display: none; /* Hidden by default */
+  width: 100%;
+  margin-top: .25rem;
+  font-size: .875em;
+  color: #D40511; /* DHL Red for errors */
+}
+
+.form-control.is-invalid ~ .invalid-feedback,
+.form-select.is-invalid ~ .invalid-feedback,
+.was-validated .form-control:invalid ~ .invalid-feedback, /* For HTML5 validation */
+.was-validated .form-select:invalid ~ .invalid-feedback {
+  display: block;
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid,
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid {
+  border-color: #D40511;
+}
+/* Add .is-valid styling if needed */
+.form-control.is-valid,
+.form-select.is-valid,
+.was-validated .form-control:valid,
+.was-validated .form-select:valid {
+ border-color: #28a745; /* Green for valid (optional) */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .page-header, .dashboard-header, .login-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .page-header .logo, .dashboard-header .logo, .login-header .logo {
+    margin-bottom: 1rem;
+    height: 60px;
+    margin-right: 0; /* Reset margin for stacked layout */
+    align-self: flex-start; /* Align logo to start when stacked */
+  }
+   .login-header .logo {
+    align-self: center; /* Center logo in login form on mobile */
+   }
+  .page-header h1, .dashboard-header h1, .login-header h1 {
+    font-size: 1.8rem;
+    align-self: flex-start; /* Align title to start when stacked */
+  }
+  .login-header h1 {
+    align-self: center; /* Center title in login form on mobile */
+  }
+
+  .btn:not(.btn-inline) { /* Full width buttons on mobile, unless specified as inline */
+    padding: 0.8rem 1rem; /* Adjust padding for full width */
+  }
+  .btn.btn-inline {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .page-container, .dashboard-container, .login-container {
+    margin: 1.5rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container, .dashboard-container, .login-container {
+    margin: 1rem;
+    padding: 1rem;
+    border-radius: 0; /* Full width on very small screens */
+    box-shadow: none;
+  }
+  .page-header h1, .dashboard-header h1, .login-header h1 {
+    font-size: 1.6rem;
+  }
+  .main-content .success-message {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+  .main-content .action-list li .btn,
+  .admin-actions .action-list li .btn {
+    width: 100%; /* Make buttons full width on small screens for better tap targets */
+    box-sizing: border-box;
+  }
+  .form-group input[type="text"],
+  .form-group input[type="password"],
+  .form-group input[type="email"] {
+    padding: 0.7rem; /* Slightly larger tap target */
+  }
+}
+/* Navbar Styles */
+.navbar {
+  background: #FFCC00; /* DHL Yellow */
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  /*border-bottom: 1px solid #D40511; */ /* DHL Red accent border */
+}
+
+.navbar .logo { /* Specific selector for navbar logo if different from page-header logo */
+  height: 34px;
+  /* margin-right is handled by justify-content: space-between on .navbar */
+}
+
+.navbar .user-info {
+  color: #333333; /* Dark text on yellow background */
+  font-weight: 500;
+}
+
+.navbar .user-info span {
+  margin-right: 0.5rem;
+}
+
+.navbar .user-info a {
+  color: #D40511; /* DHL Red for links */
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.navbar .user-info a:hover {
+  text-decoration: underline;
+}
+
+/* Ensure body background from main.ejs is also applied if it was specific */
+/* The body background is now #f4f5f7 from the general body style,
+   the old main.ejs had body background: #FFCC00.
+   If the entire page background (outside containers) should be yellow,
+   we can override it here or adjust the body style.
+   For now, sticking to #f4f5f7 for the page and #FFCC00 for navbar.
+*/

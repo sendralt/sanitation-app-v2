@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Sanitation App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .error-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            margin: 2rem;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #e74c3c;
+        }
+
+        .error-code {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .btn-home {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-home:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .error-details {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            background: #ffcc00;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #d32f2f;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .error-container {
+                padding: 2rem;
+            }
+            
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .error-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="logo">DHL</div>
+        
+        <div class="error-icon">⚠️</div>
+        
+        <% if (typeof statusCode !== 'undefined') { %>
+            <div class="error-code"><%= statusCode %></div>
+        <% } %>
+        
+        <h1 class="error-title"><%= title %></h1>
+        
+        <p class="error-message"><%= message %></p>
+        
+        <div class="error-actions">
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                ← Go Back
+            </a>
+            
+            <a href="/dashboard" class="btn btn-primary">
+                🏠 Dashboard
+            </a>
+            
+            <a href="/login-page" class="btn btn-home">
+                🔐 Login
+            </a>
+        </div>
+        
+        <% if (typeof statusCode !== 'undefined' && statusCode >= 500) { %>
+            <div class="error-details">
+                <strong>What can you do?</strong>
+                <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                    <li>Try refreshing the page</li>
+                    <li>Check your internet connection</li>
+                    <li>Contact support if the problem persists</li>
+                </ul>
+            </div>
+        <% } %>
+        
+        <% if (typeof statusCode !== 'undefined' && statusCode === 404) { %>
+            <div class="error-details">
+                <strong>Possible reasons:</strong>
+                <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                    <li>The page URL was typed incorrectly</li>
+                    <li>The page has been moved or deleted</li>
+                    <li>You don't have permission to access this page</li>
+                </ul>
+            </div>
+        <% } %>
+        
+        <% if (typeof statusCode !== 'undefined' && statusCode === 403) { %>
+            <div class="error-details">
+                <strong>Access Denied</strong>
+                <p style="margin-top: 0.5rem;">You don't have the necessary permissions to access this resource. Please contact your administrator if you believe this is an error.</p>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+        // Auto-redirect after 30 seconds for 500 errors
+        <% if (typeof statusCode !== 'undefined' && statusCode >= 500) { %>
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 30000);
+        <% } %>
+        
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

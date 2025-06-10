@@ -1,0 +1,29 @@
+# Dependency directories
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+
+# Files
+.authentication_system_plan.md
+
+# Logs
+logs/
+*.log
+
+# Build output
+dist/
+build/
+
+# Editor folders
+.vscode/
+.idea/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Data files
+data/*
+!data/.gitkeep

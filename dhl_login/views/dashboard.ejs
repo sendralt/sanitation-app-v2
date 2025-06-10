@@ -1,0 +1,30 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <!--<img src="/dhl-logo.svg" alt="DHL Logo" class="logo">--> <!-- Assuming /dhl-logo.svg is the correct path from your public assets -->
+    <h1>Welcome, <%= user.username %>!</h1>
+  </header>
+
+  <section class="main-content">
+    <h2>Actions</h2>
+    <ul class="action-list">
+      <li><a href="/app/index.html" class="btn btn-primary btn-inline">Start Checklists</a></li>
+      <li><a href="/forgot-password" class="btn btn-primary btn-inline">Reset Password</a></li>
+    </ul>
+  </section>
+
+  <% if (user && user.isAdmin) { %>
+  <section class="admin-actions">
+    <h2>Admin Panel</h2>
+    <ul class="action-list">
+      <li><a href="/admin/users/new" class="btn btn-secondary btn-inline">Create New User</a></li>
+      <li><a href="/app/barcode_generator.html" class="btn btn-secondary btn-inline" target="_blank">Generate Barcodes</a></li>
+      <li><a href="/admin/data-files" class="btn btn-secondary btn-inline">View/Search Data Files</a></li>
+      <% // Add other admin links here if needed %>
+    </ul>
+  </section>
+  <% } %>
+
+  <!--<div class="footer" style="text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #666;">
+    &copy; 2025 DHL Supply Chain | Warehouse Sanitation Checklists
+  </div>-->
+</div>
