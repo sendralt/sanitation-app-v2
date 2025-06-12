@@ -260,6 +260,13 @@ function sendEmailToSupervisor(supervisorEmail, checklistUrl, filename, checklis
     });
 }
 
+// Utility function to check if a checklist is already validated
+function isChecklistValidated(formData) {
+    return formData.supervisorValidation &&
+           formData.supervisorValidation.supervisorName &&
+           formData.supervisorValidation.validatedCheckboxes;
+}
+
 // Async version of sendEmailToSupervisor
 async function sendEmailToSupervisorAsync(supervisorEmail, checklistUrl, filename, checklistTitle) {
     const transporter = nodemailer.createTransport({
@@ -311,6 +318,9 @@ app.get('/validate/:id', authenticateApi, asyncHandler(async (req, res) => {
         throw new FileOperationError('read', `data_${fileId}.json`, error);
     }
 
+    // Check if checklist has already been validated
+    const isAlreadyValidated = isChecklistValidated(formData);
+
     // Check if randomCheckboxes is available and is an array
     if (!formData.randomCheckboxes || !Array.isArray(formData.randomCheckboxes)) {
         throw new ValidationError('Random checkboxes not found in the checklist data.');
@@ -323,11 +333,12 @@ app.get('/validate/:id', authenticateApi, asyncHandler(async (req, res) => {
         title: formData.title,
         // The full checkboxes object is needed for the client to find labels/headings
         checkboxes: formData.checkboxes,
-        randomCheckboxes: formData.randomCheckboxes
-        // We don't need to send supervisorValidation here, as this is for initial load.
+        randomCheckboxes: formData.randomCheckboxes,
+        isAlreadyValidated: isAlreadyValidated,
+        supervisorValidation: isAlreadyValidated ? formData.supervisorValidation : null
     });
 
-    console.log(`[Debug] GET /validate/:id - END - ID: ${req.params.id}`);
+    console.log(`[Debug] GET /validate/:id - END - ID: ${req.params.id}, Already Validated: ${isAlreadyValidated}`);
 }));
 
 
@@ -349,6 +360,17 @@ app.post('/validate/:id', authenticateApi, asyncHandler(async (req, res) => {
         formData = JSON.parse(fileData);
     } catch (error) {
         throw new FileOperationError('read', `data_${fileId}.json`, error);
+    }
+
+    // Check if checklist has already been validated
+    const isAlreadyValidated = isChecklistValidated(formData);
+
+    if (isAlreadyValidated) {
+        return res.status(400).json({
+            message: 'This checklist has already been validated and cannot be modified.',
+            isAlreadyValidated: true,
+            supervisorValidation: formData.supervisorValidation
+        });
     }
 
     // Update checkboxes based on the validation data (both checked and unchecked)
@@ -387,6 +409,33 @@ app.post('/validate/:id', authenticateApi, asyncHandler(async (req, res) => {
 
     res.status(200).json({ message: 'Validation completed successfully.' });
     console.log(`[Debug] POST /validate/:id - END - ID: ${req.params.id}`);
+}));
+
+// Endpoint to check validation status of a checklist
+app.get('/validate-status/:id', authenticateApi, asyncHandler(async (req, res) => {
+    const fileId = req.params.id;
+    const filePath = path.join(dataDir, `data_${fileId}.json`);
+
+    if (!fs.existsSync(filePath)) {
+        throw new NotFoundError('Checklist');
+    }
+
+    let formData;
+    try {
+        const fileData = fs.readFileSync(filePath, 'utf8');
+        formData = JSON.parse(fileData);
+    } catch (error) {
+        throw new FileOperationError('read', `data_${fileId}.json`, error);
+    }
+
+    const isValidated = isChecklistValidated(formData);
+
+    res.status(200).json({
+        fileId: fileId,
+        title: formData.title,
+        isValidated: isValidated,
+        supervisorValidation: isValidated ? formData.supervisorValidation : null
+    });
 }));
 
 // Endpoint to view the checklist data in the browser

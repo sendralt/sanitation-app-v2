@@ -185,6 +185,63 @@
             margin: 1rem 0;
         }
 
+        .completed {
+            color: #6c757d;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        /* Completed checklist styles */
+        .completed-checklist {
+            opacity: 0.7;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .completed-checklist h3 {
+            color: #6c757d;
+            border-bottom-color: #dee2e6;
+        }
+
+        .completed-checklist .task-item {
+            background-color: transparent;
+        }
+
+        .completed-checklist .task-item:hover {
+            background-color: rgba(108, 117, 125, 0.1);
+        }
+
+        .completed-checklist input[type="checkbox"] {
+            pointer-events: none;
+        }
+
+        .completed-checklist label {
+            color: #6c757d;
+        }
+
+        .validation-status {
+            background-color: #e9ecef;
+            border-left: 4px solid #6c757d;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .validation-status h4 {
+            margin: 0 0 0.5rem 0;
+            color: #495057;
+        }
+
+        .validation-status p {
+            margin: 0;
+            color: #6c757d;
+        }
+
         /* Links */
         a {
             color: #D40511;
@@ -298,24 +355,46 @@
         let authToken = null;
         let currentUser = null;
 
-        // Function to fetch JWT from the server (dhl_login)
-        async function fetchAuthToken() {
+        // Function to fetch JWT from the server (dhl_login) with retry logic
+        async function fetchAuthToken(retryCount = 0) {
+            const maxRetries = 3;
             try {
-                const response = await fetch('/api/auth/issue-jwt-for-session');
+                console.log(`[Debug] fetchAuthToken: Attempt ${retryCount + 1}/${maxRetries + 1}`);
+                const response = await fetch('/api/auth/issue-jwt-for-session', {
+                    method: 'GET',
+                    credentials: 'include', // Include cookies for session
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
                 if (!response.ok) {
                     if (response.status === 401) {
                         console.error('[Debug] fetchAuthToken: Session not authenticated to get JWT (401).');
+                        throw new Error('Not authenticated - please log in');
                     } else {
                         console.error(`[Debug] fetchAuthToken: Failed to fetch JWT. Status: ${response.status}`);
+                        throw new Error(`HTTP ${response.status}: Failed to fetch authentication token`);
                     }
-                    return;
                 }
+
                 const data = await response.json();
                 authToken = data.token;
                 currentUser = data.user;
                 console.log('[Debug] fetchAuthToken: JWT acquired successfully for user:', currentUser.username);
+                return true;
             } catch (error) {
-                console.error('[Debug] fetchAuthToken: Error acquiring JWT:', error);
+                console.error(`[Debug] fetchAuthToken: Error on attempt ${retryCount + 1}:`, error);
+
+                if (retryCount < maxRetries) {
+                    console.log(`[Debug] fetchAuthToken: Retrying in 1 second...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return fetchAuthToken(retryCount + 1);
+                } else {
+                    console.error('[Debug] fetchAuthToken: All retry attempts failed');
+                    throw error;
+                }
             }
         }
 
@@ -351,24 +430,28 @@
                 return;
             }
 
-            // Ensure authToken is available (fetchAuthToken is from global scripts.js)
-            // fetchAuthToken might have already been called if scripts.js runs it on load for /app/* pages
-            // We need to ensure it has completed before proceeding.
-            // A simple way is to re-call it or check if authToken is populated.
-            // For robustness, fetchAuthToken could return a promise.
-            // Assuming fetchAuthToken is defined in scripts.js and populates global 'authToken' and 'currentUser'
-            if (typeof fetchAuthToken !== 'function') {
-                 displayMessage('Error: Authentication script not loaded correctly.', 'error');
-                 return;
-            }
-            
-            if (!authToken) { // If scripts.js didn't auto-run it or it's not ready
-                await fetchAuthToken(); // Wait for it
-            }
+            // Ensure authToken is available with robust error handling
+            try {
+                if (!authToken) {
+                    console.log('[Debug] No auth token found, attempting to fetch...');
+                    await fetchAuthToken();
+                }
 
-            if (!authToken) {
+                if (!authToken) {
+                    throw new Error('Failed to obtain authentication token');
+                }
+
+                console.log('[Debug] Authentication successful, proceeding with checklist load');
+            } catch (error) {
+                console.error('[Debug] Authentication failed:', error);
                 checklistTitleEl.textContent = 'Authentication Error';
-                itemsContainerEl.innerHTML = '<p style="color: red;">Could not authenticate to fetch checklist details. Please ensure you are logged in.</p>';
+                itemsContainerEl.innerHTML = `
+                    <div class="error">
+                        <strong>Authentication Failed:</strong> ${error.message}<br>
+                        <p>Please <a href="/login-page">log in</a> and try again.</p>
+                        <p>If you continue to have issues, try refreshing the page.</p>
+                    </div>
+                `;
                 validationForm.style.display = 'none';
                 return;
             }
@@ -391,21 +474,69 @@
                     backendApiUrl = 'http://localhost:3001';
                 }
 
+                console.log(`[Debug] Fetching checklist data from: ${backendApiUrl}/validate/${checklistId}`);
                 const response = await fetch(`${backendApiUrl}/validate/${checklistId}`, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${authToken}`
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
                     }
                 });
 
+                console.log(`[Debug] Response status: ${response.status}`);
+
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
-                    throw new Error(errorData.message || `Failed to fetch checklist data. Status: ${response.status}`);
+                    console.error('[Debug] API Error:', errorData);
+
+                    if (response.status === 401) {
+                        throw new Error('Authentication failed. Please log in again.');
+                    } else if (response.status === 404) {
+                        throw new Error('Checklist not found. The link may be invalid or expired.');
+                    } else {
+                        throw new Error(errorData.message || `Failed to fetch checklist data. Status: ${response.status}`);
+                    }
                 }
 
                 const checklistData = await response.json();
+                console.log('[Debug] Checklist data received:', {
+                    title: checklistData.title,
+                    isAlreadyValidated: checklistData.isAlreadyValidated,
+                    hasSupervisorValidation: !!checklistData.supervisorValidation
+                });
+
+                // Check if checklist is already validated
+                if (checklistData.isAlreadyValidated) {
+                    console.log('[Debug] Checklist is already validated, showing completion status');
+                    checklistTitleEl.textContent = `Checklist Already Completed: ${checklistData.title || 'Untitled Checklist'}`;
+
+                    // Display validation status information
+                    const validationInfo = checklistData.supervisorValidation;
+                    itemsContainerEl.innerHTML = `
+                        <div class="validation-status">
+                            <h4>✓ Validation Completed</h4>
+                            <p><strong>Validated by:</strong> ${validationInfo.supervisorName}</p>
+                            <p><strong>Status:</strong> This checklist has been completed and can no longer be modified.</p>
+                        </div>
+                        <div class="completed">
+                            <strong>Note:</strong> This checklist validation link is no longer active.
+                            The checklist has already been reviewed and validated.
+                        </div>
+                    `;
+
+                    // Hide the validation form
+                    validationForm.style.display = 'none';
+
+                    // Show completed checklist items for reference
+                    displayCompletedChecklist(checklistData);
+                    return;
+                }
+
+                console.log('[Debug] Checklist is pending validation, showing form');
+
                 checklistTitleEl.textContent = `Validating: ${checklistData.title || 'Untitled Checklist'}`;
-                
+
                 // Dynamically render validation items (randomCheckboxes)
                 itemsContainerEl.innerHTML = ''; // Clear loading message
                 if (checklistData.randomCheckboxes && checklistData.randomCheckboxes.length > 0) {
@@ -467,6 +598,65 @@
                 validationForm.style.display = 'none';
             }
 
+            // Function to display completed checklist for reference
+            function displayCompletedChecklist(checklistData) {
+                const completedContainer = document.createElement('div');
+                completedContainer.className = 'completed-checklist';
+                completedContainer.innerHTML = '<h3>Validation Items (Read-Only)</h3>';
+
+                const validationItemsByHeading = {};
+                const validatedCheckboxes = checklistData.supervisorValidation.validatedCheckboxes;
+
+                checklistData.randomCheckboxes.forEach(checkboxId => {
+                    let foundHeading = "Uncategorized Tasks";
+                    let labelText = checkboxId;
+                    let validatedState = validatedCheckboxes[checkboxId] || false;
+
+                    for (const headingKey in checklistData.checkboxes) {
+                        if (checklistData.checkboxes[headingKey] && checklistData.checkboxes[headingKey][checkboxId]) {
+                            const item = checklistData.checkboxes[headingKey][checkboxId];
+                            labelText = item.label || checkboxId;
+                            foundHeading = headingKey;
+                            break;
+                        }
+                    }
+                    if (!validationItemsByHeading[foundHeading]) {
+                        validationItemsByHeading[foundHeading] = [];
+                    }
+                    validationItemsByHeading[foundHeading].push({
+                        id: checkboxId,
+                        label: labelText,
+                        checked: validatedState
+                    });
+                });
+
+                for (const heading in validationItemsByHeading) {
+                    const headingEl = document.createElement('h4');
+                    headingEl.textContent = heading;
+                    headingEl.style.color = '#6c757d';
+                    completedContainer.appendChild(headingEl);
+
+                    validationItemsByHeading[heading].forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'task-item';
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.checked = item.checked;
+                        checkbox.disabled = true;
+
+                        const label = document.createElement('label');
+                        label.textContent = item.label;
+                        label.style.color = '#6c757d';
+
+                        div.appendChild(checkbox);
+                        div.appendChild(label);
+                        completedContainer.appendChild(div);
+                    });
+                }
+
+                itemsContainerEl.appendChild(completedContainer);
+            }
+
             // Handle form submission
             validationForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
@@ -518,10 +708,31 @@
                     });
 
                     if (!response.ok) {
-                         const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
+                        const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
+
+                        // Check if the error is due to already validated checklist
+                        if (response.status === 400 && errorData.isAlreadyValidated) {
+                            displayMessage('This checklist has already been validated by another supervisor and can no longer be modified.', 'completed');
+                            validationForm.style.display = 'none';
+
+                            // Show the validation info
+                            const validationInfo = errorData.supervisorValidation;
+                            if (validationInfo) {
+                                const statusDiv = document.createElement('div');
+                                statusDiv.className = 'validation-status';
+                                statusDiv.innerHTML = `
+                                    <h4>✓ Already Validated</h4>
+                                    <p><strong>Validated by:</strong> ${validationInfo.supervisorName}</p>
+                                    <p><strong>Status:</strong> This checklist was completed while you were reviewing it.</p>
+                                `;
+                                messageArea.appendChild(statusDiv);
+                            }
+                            return;
+                        }
+
                         throw new Error(errorData.message || `Failed to submit validation. Status: ${response.status}`);
                     }
-                    
+
                     const result = await response.json();
                     displayMessage(result.message || 'Validation submitted successfully!', 'success');
                     validationForm.style.display = 'none'; // Hide form on success
