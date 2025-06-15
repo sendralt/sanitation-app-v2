@@ -5,11 +5,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
+const rateLimit = require('express-rate-limit'); // Import express-rate-limit
 
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');  // Import the file system module
 const http = require('http');
+const db = require('./config/db'); // Import PostgreSQL configuration
 
 const nodemailer = require('nodemailer');  // Import nodemailer for sending emails
 const { loadSSLCertificates, createHTTPSServer, getSSLConfig } = require('./config/ssl');
@@ -81,6 +83,15 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 console.log(`CORS configured with allowed origins: ${allowedOrigins.join(', ')}`);
+
+// Define the rate limiter
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `windowMs`
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { message: 'Too many requests from this IP, please try again after 15 minutes.' },
+});
 
 // Serve static files
 console.log('Registering static file middleware...');
@@ -173,7 +184,7 @@ async function saveDataToFileAsync(data, filePath) {
 // Define authenticateApi middleware for protecting routes
 const authenticateApi = passport.authenticate('jwt', { session: false });
 
-app.post('/submit-form', authenticateApi, asyncHandler(async (req, res) => {
+app.post('/submit-form', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
     const formData = req.body;
 
     console.log('Received Data:', formData);
@@ -212,6 +223,77 @@ app.post('/submit-form', authenticateApi, asyncHandler(async (req, res) => {
     } catch (error) {
         throw new FileOperationError('save', filename, error);
     }
+
+    // --- NEW: Save to PostgreSQL ---
+    const client = await db.getClient(); // Get a client from the pool for transaction
+    try {
+        await client.query('BEGIN');
+
+        // Insert into ChecklistSubmissions
+        const submissionRes = await client.query(
+            `INSERT INTO "ChecklistSubmissions"
+             ("original_checklist_filename", "checklist_title", "submitted_by_user_id", "submitted_by_username", "status", "json_file_path")
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING "submission_id"`,
+            [
+                formData.original_checklist_filename || formData.title, // Use original_checklist_filename if available, else title
+                formData.title,
+                req.user.userId, // Assuming JWT payload has userId
+                req.user.username, // Assuming JWT payload has username
+                'PendingSupervisorValidation',
+                filePath
+            ]
+        );
+        const submissionId = submissionRes.rows[0].submission_id;
+
+        // Iterate through headings and tasks from formData.checkboxes
+        let headingOrder = 0;
+        for (const headingText in formData.checkboxes) {
+            if (Object.hasOwnProperty.call(formData.checkboxes, headingText)) {
+                headingOrder++;
+                const headingRes = await client.query(
+                    `INSERT INTO "SubmissionHeadings" ("submission_id", "heading_text", "display_order")
+                     VALUES ($1, $2, $3) RETURNING "heading_id"`,
+                    [submissionId, headingText, headingOrder]
+                );
+                const headingId = headingRes.rows[0].heading_id;
+
+                const tasks = formData.checkboxes[headingText];
+                for (const taskIdentifier in tasks) {
+                    if (Object.hasOwnProperty.call(tasks, taskIdentifier)) {
+                        const taskData = tasks[taskIdentifier];
+                        await client.query(
+                            `INSERT INTO "SubmissionTasks"
+                             ("heading_id", "task_identifier_in_json", "task_label", "is_checked_on_submission", "current_status")
+                             VALUES ($1, $2, $3, $4, $5)`,
+                            [
+                                headingId,
+                                taskIdentifier,
+                                taskData.label,
+                                taskData.checked,
+                                'Pending' // Initial status for tasks in PG
+                            ]
+                        );
+                    }
+                }
+            }
+        }
+        
+        // TODO: Log to AuditTrail (Phase 1 enhancement or Phase 2)
+        // TODO: Trigger Automation Engine (Phase 2)
+
+        await client.query('COMMIT');
+        console.log(`[DB] Successfully saved submission ${submissionId} to PostgreSQL.`);
+    } catch (dbError) {
+        await client.query('ROLLBACK');
+        console.error('[DB] Error saving submission to PostgreSQL, transaction rolled back:', dbError);
+        // Decide if this should be a critical error stopping the response or just log and continue
+        // For now, we'll let the email sending proceed as JSON file was saved.
+        // Consider throwing a new DatabaseError if this should halt the process:
+        // throw new DatabaseError('save submission', { originalError: dbError });
+    } finally {
+        client.release(); // Release client back to the pool
+    }
+    // --- END NEW: Save to PostgreSQL ---
 
     // Send an email to the supervisor with the same timestamp in the checklist link
     // BASE_URL should point to the dhl_login server (e.g., http://localhost:3000)
@@ -298,7 +380,7 @@ async function sendEmailToSupervisorAsync(supervisorEmail, checklistUrl, filenam
 }
 
 // Route to handle GET /validate/:id (load the validation page)
-app.get('/validate/:id', authenticateApi, asyncHandler(async (req, res) => {
+app.get('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
     console.log(`[Debug] GET /validate/:id - START - ID: ${req.params.id}`);
     const fileId = req.params.id;  // Get the unique ID from the URL (timestamp)
 
@@ -343,7 +425,7 @@ app.get('/validate/:id', authenticateApi, asyncHandler(async (req, res) => {
 
 
 // POST route to handle supervisor validation form submission
-app.post('/validate/:id', authenticateApi, asyncHandler(async (req, res) => {
+app.post('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
     console.log(`[Debug] POST /validate/:id - START - ID: ${req.params.id}`);
     const fileId = req.params.id;
     const validationData = req.body;
@@ -412,7 +494,7 @@ app.post('/validate/:id', authenticateApi, asyncHandler(async (req, res) => {
 }));
 
 // Endpoint to check validation status of a checklist
-app.get('/validate-status/:id', authenticateApi, asyncHandler(async (req, res) => {
+app.get('/validate-status/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
     const fileId = req.params.id;
     const filePath = path.join(dataDir, `data_${fileId}.json`);
 
@@ -439,7 +521,7 @@ app.get('/validate-status/:id', authenticateApi, asyncHandler(async (req, res) =
 }));
 
 // Endpoint to view the checklist data in the browser
-app.get('/view-checklist/:id', authenticateApi, asyncHandler(async (req, res) => {
+app.get('/view-checklist/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
     const fileId = req.params.id;  // Get the unique ID from the URL (timestamp)
 
     // Construct the file path based on the ID
@@ -463,7 +545,7 @@ app.get('/view-checklist/:id', authenticateApi, asyncHandler(async (req, res) =>
 }));
 
 // Endpoint to view the checklist data in a readable HTML format
-app.get('/view-checklist-html/:id', authenticateApi, asyncHandler(async (req, res) => {
+app.get('/view-checklist-html/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
     const fileId = req.params.id;  // Get the unique ID from the URL (timestamp)
 
     // Construct the file path based on the ID

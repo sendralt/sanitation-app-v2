@@ -51,9 +51,8 @@ This document outlines the findings of a codebase audit performed against the re
         *   Client-side validation exists in `Public/scripts.js` (line `319`) but is insufficient for security.
     *   **Action Needed:** Implement robust server-side email format validation. Use `express-validator`'s `.isEmail()` method or a similar reliable validation for:
         *   The `supervisorEmail` field at the `/submit-form` endpoint in `backend/server.js`.
-        *   User email fields during account creation and updates in `dhl_login/routes/admin.js`.
 
-*   **Task ID:** 3.2
+*   **Task ID:** 3.2 COMPLETED
     *   **Priority:** CRITICAL
     *   **Issue:** Missing Rate Limiting on API Endpoints (Specifically for `backend`) ([`docs/CODE_REVIEW.md:110`](docs/CODE_REVIEW.md:110))
     *   **Locations:** API routes defined in `backend/server.js` (e.g., `/submit-form`, `/validate/:id`) lack applied rate-limiting middleware. The `express-rate-limit` package is a dependency but not used here. (`dhl_login` *does* apply rate limiting to its API routes).
@@ -63,9 +62,10 @@ This document outlines the findings of a codebase audit performed against the re
     *   **Priority:** HIGH
     *   **Issue:** Missing HTTPS Configuration ([`docs/CODE_REVIEW.md:139`](docs/CODE_REVIEW.md:139))
     *   **Status Update:** Both `backend/server.js` (line `511`) and `dhl_login/app.js` (line `311`) include HTTPS setup logic via `./config/ssl.js`.
-    *   **Action Needed:** The original item in `CODE_REVIEW.md` might be outdated or refer to production-specific aspects not covered by the current dev setup.
-        1.  Clarify if the existing HTTPS setup (likely using self-signed certificates for development) is the concern, or if the requirement is for production-grade HTTPS (CA-signed certificates, HSTS, etc.).
-        2.  If for production, the action is to implement HTTPS using certificates from a trusted Certificate Authority, ensure HTTP to HTTPS redirection is enforced, and configure HSTS properly.
+    *   **Action Needed:**
+        1.  Verify that the SSL setup is correctly configured to use Let's Encrypt certificates in production (as per `SSL_SETUP.md`).
+        2.  Ensure that the HTTP to HTTPS redirection is properly enforced in both `backend` and `dhl_login` services.
+        3.  Implement HSTS headers in both services to ensure strict transport security.
 
 *   **Task ID:** 3.5
     *   **Priority:** HIGH
