@@ -56,6 +56,35 @@ COMMENT ON COLUMN "SubmissionTasks"."task_identifier_in_json" IS 'Original ID of
 COMMENT ON COLUMN "SubmissionTasks"."current_status" IS 'Current operational status of the task.';
 COMMENT ON COLUMN "SubmissionTasks"."supervisor_validated_status" IS 'Status after supervisor validation, if applicable.';
 
+-- SupervisorValidationsLog Table
+-- Logs supervisor validations of checklist submissions.
+CREATE TABLE "SupervisorValidationsLog" (
+    "validation_id" SERIAL PRIMARY KEY,
+    "submission_id" INTEGER NOT NULL REFERENCES "ChecklistSubmissions"("submission_id") ON DELETE CASCADE,
+    "validated_by_user_id" INTEGER,    -- Supervisor's User ID from JWT
+    "validated_by_username" TEXT,      -- Supervisor's Username from JWT
+    "validation_timestamp" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "overall_status" VARCHAR(20),       -- e.g., 'OK', 'NotOK', 'NeedsReview'
+    "comments" TEXT,                    -- Overall comments on the submission
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- AuditTrail Table
+-- Generic audit log for tracking actions performed on the system.
+CREATE TABLE "AuditTrail" (
+    "audit_id" SERIAL PRIMARY KEY,
+    "action_timestamp" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "user_id" INTEGER,              -- User ID performing the action (if applicable)
+    "username" TEXT,                -- Username performing the action (if applicable)
+    "action_type" VARCHAR(50) NOT NULL, -- e.g., 'Submission', 'Validation', 'Assignment', 'StatusUpdate'
+    "description" TEXT,             -- Detailed description of the action
+    "affected_record_id" INTEGER,   -- ID of the record affected by the action (e.g., submission_id, task_id)
+    "affected_table" VARCHAR(50),    -- Table affected by the action (e.g., "ChecklistSubmissions", "SubmissionTasks")
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_checklistsubmissions_status ON "ChecklistSubmissions"("status");
 CREATE INDEX IF NOT EXISTS idx_checklistsubmissions_assigned_user ON "ChecklistSubmissions"("assigned_to_user_id");
@@ -74,6 +103,16 @@ $$ language 'plpgsql';
 -- Triggers to update 'updated_at' on table updates
 CREATE TRIGGER update_checklistsubmissions_updated_at
 BEFORE UPDATE ON "ChecklistSubmissions"
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_supervisorvalidationslog_updated_at
+BEFORE UPDATE ON "SupervisorValidationsLog"
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_audittrail_updated_at
+BEFORE UPDATE ON "AuditTrail"
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 

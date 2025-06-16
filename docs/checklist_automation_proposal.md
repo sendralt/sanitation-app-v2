@@ -1,5 +1,5 @@
 # Proposal: Advanced Checklist Assignment Automation & Tracking System
-
+ 
 **1. Introduction**
 
 This proposal outlines a system to enhance the current sanitation checklist application by introducing advanced automated checklist assignments, comprehensive tracking using a new PostgreSQL database, and robust Business Intelligence (BI) and role-based dashboard capabilities. The existing workflow of saving checklist submissions as JSON files (for the current supervisor email validation process) will be retained, and user authentication will continue to be managed by the `dhl_login` application using its SQLite database. The new PostgreSQL database will serve as an enriched data store primarily for these new advanced features.
