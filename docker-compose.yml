@@ -5,8 +5,8 @@ services:
     image: postgres:latest # Using PostgreSQL version 15, you can change to :latest or another version
     container_name: dhl_sanitation_pg_container # A specific name for the running container
     environment:
-      POSTGRES_USER: sanitation_app_user # Replace with your desired superuser for this instance
-      POSTGRES_PASSWORD: your_strong_password_here # Replace with a strong password
+      POSTGRES_USER: sanitation_user_1 # Replace with your desired superuser for this instance
+      POSTGRES_PASSWORD: Checklist123 # Replace with a strong password
       POSTGRES_DB: sanitation_checklist_db # The database that will be created on init
     ports:
       - "5432:5432" # Maps port 5432 on your host to port 5432 in the container
