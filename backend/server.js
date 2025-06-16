@@ -424,6 +424,7 @@ app.get('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, r
 }));
 
 
+
 // POST route to handle supervisor validation form submission
 app.post('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
     console.log(`[Debug] POST /validate/:id - START - ID: ${req.params.id}`);
@@ -489,9 +490,55 @@ app.post('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, 
         throw new FileOperationError('write', `data_${fileId}.json`, error);
     }
 
+    // --- NEW: Save validation data to PostgreSQL and AuditTrail ---
+    const client = await db.getClient(); // Get a client from the pool for transaction
+    try {
+        await client.query('BEGIN');
+
+        // 1. Insert into SupervisorValidationsLog
+        const validationRes = await client.query(
+            `INSERT INTO "SupervisorValidationsLog" ("submission_id", "validated_by_user_id", "validated_by_username", "overall_status", "comments")
+             VALUES ($1, $2, $3, $4, $5) RETURNING "validation_id"`,
+            [
+                formData.submission_id, // Assuming you have submission_id in formData
+                req.user.userId,
+                req.user.username,
+                'OK', // Or derive from validationData
+                validationData.comments // Assuming you have comments in validationData
+            ]
+        );
+        const validationId = validationRes.rows[0].validation_id;
+
+        // 2. Log to AuditTrail
+        await client.query(
+            `INSERT INTO "AuditTrail" ("action_timestamp", "user_id", "username", "action_type", "description", "affected_record_id", "affected_table")
+             VALUES (NOW(), $1, $2, $3, $4, $5, $6)`,
+            [
+                req.user.userId,
+                req.user.username,
+                'Validation',
+                `Supervisor validated submission ${formData.submission_id}`,
+                validationId,
+                'SupervisorValidationsLog'
+            ]
+        );
+
+        await client.query('COMMIT');
+        console.log(`[DB] Successfully saved validation data ${validationId} to PostgreSQL.`);
+    } catch (dbError) {
+        await client.query('ROLLBACK');
+        console.error('[DB] Error saving validation data to PostgreSQL, transaction rolled back:', dbError);
+    } finally {
+        client.release(); // Release client back to the pool
+    }
+    // --- END NEW: Save validation data to PostgreSQL and AuditTrail ---
+
     res.status(200).json({ message: 'Validation completed successfully.' });
     console.log(`[Debug] POST /validate/:id - END - ID: ${req.params.id}`);
 }));
+
+
+
 
 // Endpoint to check validation status of a checklist
 app.get('/validate-status/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
