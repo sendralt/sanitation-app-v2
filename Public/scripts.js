@@ -381,16 +381,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 backendApiUrl = window.AppConfig.getBackendApiUrl();
             } else {
                 // Fallback if config module is not available
-                backendApiUrl = 'https://localhost:3001';
+                backendApiUrl = window.AppConfig.getBackendApiUrl();
                 console.warn('[saveData] Config module not available, using fallback URL');
             }
         } catch (error) {
             console.error('[saveData] Failed to load configuration:', error);
-            backendApiUrl = 'http://localhost:3001';
+            backendApiUrl = window.AppConfig.getBackendApiUrl();
         }
 
         console.log('[Debug] saveData: Using backend URL:', backendApiUrl);
-        return fetch(`${backendApiUrl}/submit-form`, { // Dynamic URL from configuration
+        return fetch(`${backendApiUrl}/submit-form`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

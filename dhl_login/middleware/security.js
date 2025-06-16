@@ -16,7 +16,7 @@ const securityHeaders = helmet({
             styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for EJS templates
             scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com"], // Allow jQuery CDN
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "https://localhost:3001", "https://dot1hundred.com"],
+            connectSrc: ["'self'", "http://localhost:3001", "https://localhost:3001", "https://dot1hundred.com"],
             fontSrc: ["'self'"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],

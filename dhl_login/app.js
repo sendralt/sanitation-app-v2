@@ -85,7 +85,7 @@ const isSSLEnabled = process.env.ENABLE_SSL === 'true';
 // This allows for production deployments behind reverse proxies that handle SSL termination
 const useSecureCookies = isSSLEnabled;
 app.use(session({
-  secret            : process.env.SESSION_SECRET,
+  secret            : 'wRVPT1tLZK0kYAvSxVbg5n3hCmN9u82jpxODq6YeblJMHvUGzaE7cWiX4Ftk5oQm',
   resave            : false,
   saveUninitialized : false,
   cookie            : {
@@ -302,6 +302,26 @@ app.use('/checklists', require('./routes/checklist')); // protected
 
 // --- Health Check Routes ---
 app.use('/', require('./routes/health'));
+
+app.get('/health/database', async (req, res) => {
+  try {
+    const sequelize = require('./config/sequelize');
+    await sequelize.authenticate();
+    const User = require('./models/user');
+    const adminUser = await User.findOne({ where: { username: 'admin' } });
+    res.json({ 
+      status: 'ok', 
+      databaseConnected: true,
+      adminUserExists: !!adminUser
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
 
 // --- Error handling middleware (must be last) ---
 app.use(notFoundHandler);
