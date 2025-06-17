@@ -1,5 +1,3 @@
-<%- include('layouts/main', { title: 'Dashboard', user: user }) %>
-
 <style>
 .dashboard-container {
   max-width: 1200px;
@@ -325,21 +323,36 @@
     </div>
     <% } %>
   </div>
-
-  <div class="footer" style="text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #666;">
-    &copy; 2025 DHL Supply Chain | Warehouse Sanitation Checklists
-  </div>
 </div>
 
 <script>
 // Dashboard functionality
-let backendApiUrl = 'http://localhost:3445'; // Default backend URL
+let backendApiUrl = 'http://localhost:3001'; // Default backend URL
 
 // Load dashboard data on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadUserStats();
-    loadActiveAssignments();
-    loadRecentSubmissions();
+document.addEventListener('DOMContentLoaded', async function() {
+    // Ensure authentication before loading data
+    const authenticated = await ensureAuthentication();
+    if (authenticated) {
+        loadUserStats();
+        loadActiveAssignments();
+        loadRecentSubmissions();
+    } else {
+        console.warn('User not authenticated for API calls');
+        // Optionally redirect to login or show a message
+    }
+
+    // Add event listeners for dynamically created buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.start-assignment-btn')) {
+            const assignmentId = e.target.closest('.start-assignment-btn').dataset.assignmentId;
+            startAssignment(assignmentId);
+        } else if (e.target.closest('.retry-assignments-btn')) {
+            loadActiveAssignments();
+        } else if (e.target.closest('.retry-submissions-btn')) {
+            loadRecentSubmissions();
+        }
+    });
 });
 
 // Get JWT token from localStorage or session
@@ -355,6 +368,9 @@ async function makeAuthenticatedRequest(url, options = {}) {
         return null;
     }
 
+    console.log('[makeAuthenticatedRequest] Using token:', token.substring(0, 50) + '...');
+    console.log('[makeAuthenticatedRequest] Making request to:', url);
+
     const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -367,7 +383,19 @@ async function makeAuthenticatedRequest(url, options = {}) {
             headers
         });
 
+        console.log('[makeAuthenticatedRequest] Response status:', response.status);
+
         if (!response.ok) {
+            if (response.status === 401) {
+                console.error('[makeAuthenticatedRequest] 401 Unauthorized - token may be expired or invalid');
+                // Try to get a fresh token
+                const newToken = await ensureAuthentication();
+                if (newToken) {
+                    console.log('[makeAuthenticatedRequest] Got fresh token, retrying request...');
+                    // Retry the request with the new token
+                    return makeAuthenticatedRequest(url, options);
+                }
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -429,7 +457,7 @@ async function loadActiveAssignments() {
                             </span>
                         </div>
                         <div style="margin-top: 0.5rem;">
-                            <button class="btn btn-primary btn-sm" onclick="startAssignment(${assignment.assignment_id})">
+                            <button class="btn btn-primary btn-sm start-assignment-btn" data-assignment-id="${assignment.assignment_id}">
                                 <i class="fas fa-play"></i> Start
                             </button>
                         </div>
@@ -442,7 +470,7 @@ async function loadActiveAssignments() {
             <div class="empty-state">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Failed to load assignments</p>
-                <button class="btn btn-secondary btn-sm" onclick="loadActiveAssignments()">
+                <button class="btn btn-secondary btn-sm retry-assignments-btn">
                     <i class="fas fa-retry"></i> Retry
                 </button>
             </div>
@@ -487,7 +515,7 @@ async function loadRecentSubmissions() {
             <div class="empty-state">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Failed to load submissions</p>
-                <button class="btn btn-secondary btn-sm" onclick="loadRecentSubmissions()">
+                <button class="btn btn-secondary btn-sm retry-submissions-btn">
                     <i class="fas fa-retry"></i> Retry
                 </button>
             </div>
@@ -521,7 +549,10 @@ function refreshDashboard() {
 // Check if user has JWT token, if not, try to get one
 async function ensureAuthentication() {
     const token = getJWTToken();
+    console.log('[ensureAuthentication] Current token:', token ? 'exists' : 'not found');
+
     if (!token) {
+        console.log('[ensureAuthentication] No token found, requesting new one...');
         // Try to get a new token using session authentication
         try {
             const response = await fetch('/api/auth/token', {
@@ -529,29 +560,27 @@ async function ensureAuthentication() {
                 credentials: 'include'
             });
 
+            console.log('[ensureAuthentication] Token request response status:', response.status);
+
             if (response.ok) {
                 const data = await response.json();
+                console.log('[ensureAuthentication] Token response data:', data);
                 if (data.token) {
                     localStorage.setItem('jwtToken', data.token);
+                    console.log('[ensureAuthentication] Token saved to localStorage');
                     return true;
                 }
+            } else {
+                console.error('[ensureAuthentication] Token request failed with status:', response.status);
             }
         } catch (error) {
-            console.error('Failed to get JWT token:', error);
+            console.error('[ensureAuthentication] Failed to get JWT token:', error);
         }
         return false;
     }
+    console.log('[ensureAuthentication] Using existing token');
     return true;
 }
 
-// Initialize authentication and load data
-ensureAuthentication().then(authenticated => {
-    if (authenticated) {
-        // Data loading is already triggered by DOMContentLoaded
-    } else {
-        console.warn('User not authenticated for API calls');
-    }
-});
-</script>
 
-<%- include('layouts/main-footer') %>
+</script>

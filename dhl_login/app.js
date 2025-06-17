@@ -35,7 +35,7 @@ const app = express();
 
 // --- CORS Configuration for API endpoints
 // Parse allowed origins from environment variable
-const allowedOriginsString = process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3001';
+const allowedOriginsString = process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3001,http://localhost:3000';
 const allowedOrigins = allowedOriginsString.split(',').map(origin => origin.trim());
 
 // Configure CORS options for API routes
