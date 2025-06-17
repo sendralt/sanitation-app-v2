@@ -312,7 +312,39 @@ router.get('/issue-jwt-for-session', (req, res) => {
     }
 });
 
-// 8. Protected Route Example: GET /me (Requires JWT)
+// 8. Get JWT token for dashboard: POST /token (Requires Session)
+router.post('/token', (req, res) => {
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({
+            success: false,
+            message: 'User not authenticated via session.'
+        });
+    }
+
+    try {
+        const user = req.user;
+        const token = generateToken(user);
+        res.status(200).json({
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                isAdmin: user.isAdmin
+            }
+        });
+    } catch (error) {
+        console.error('[Auth Router /token] Error issuing JWT:', error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while issuing JWT.'
+        });
+    }
+});
+
+// 9. Protected Route Example: GET /me (Requires JWT)
 // This route will be mounted under /api/auth, so full path is /api/auth/me
 router.get('/me', authenticateJwt, (req, res) => {
     // req.user is populated by authenticateJwt middleware

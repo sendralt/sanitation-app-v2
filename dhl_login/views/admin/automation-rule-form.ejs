@@ -1,0 +1,235 @@
+<%- include('../layouts/main', { title: title, user: user }) %>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Navigation -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/admin">Admin Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/admin/automation-rules">Automation Rules</a></li>
+                    <li class="breadcrumb-item active"><%= isEdit ? 'Edit Rule' : 'Create Rule' %></li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-robot"></i>
+                        <%= isEdit ? 'Edit Automation Rule' : 'Create New Automation Rule' %>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Flash Messages -->
+                    <% if (errorMessages && errorMessages.length > 0) { %>
+                        <div class="alert alert-danger">
+                            <% errorMessages.forEach(message => { %>
+                                <div><%= message %></div>
+                            <% }); %>
+                        </div>
+                    <% } %>
+
+                    <form method="POST" action="<%= isEdit ? `/admin/automation-rules/${rule.rule_id}` : '/admin/automation-rules' %>">
+                        <input type="hidden" name="_csrf" value="<%= _csrf %>">
+
+                        <!-- Source Checklist Pattern -->
+                        <div class="mb-3">
+                            <label for="source_checklist_filename_pattern" class="form-label">
+                                Source Checklist Pattern <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control <%= validationErrors.source_checklist_filename_pattern ? 'is-invalid' : '' %>" 
+                                   id="source_checklist_filename_pattern" 
+                                   name="source_checklist_filename_pattern" 
+                                   value="<%= rule.source_checklist_filename_pattern || '' %>"
+                                   placeholder="e.g., 1_A_Cell_West_Side_Daily.html or %_Daily.html"
+                                   required>
+                            <div class="form-text">
+                                Exact filename or pattern with % wildcards. Examples: 
+                                <code>1_A_Cell_West_Side_Daily.html</code> or <code>%_Daily.html</code>
+                            </div>
+                            <% if (validationErrors.source_checklist_filename_pattern) { %>
+                                <div class="invalid-feedback">
+                                    <%= validationErrors.source_checklist_filename_pattern %>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <!-- Trigger Event -->
+                        <div class="mb-3">
+                            <label for="trigger_event" class="form-label">
+                                Trigger Event <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select <%= validationErrors.trigger_event ? 'is-invalid' : '' %>" 
+                                    id="trigger_event" 
+                                    name="trigger_event" 
+                                    required>
+                                <option value="">Select trigger event...</option>
+                                <option value="ON_SUBMISSION_COMPLETE" 
+                                        <%= rule.trigger_event === 'ON_SUBMISSION_COMPLETE' ? 'selected' : '' %>>
+                                    On Submission Complete
+                                </option>
+                                <option value="ON_SUPERVISOR_VALIDATION" 
+                                        <%= rule.trigger_event === 'ON_SUPERVISOR_VALIDATION' ? 'selected' : '' %>>
+                                    On Supervisor Validation
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                When should this rule be triggered?
+                            </div>
+                            <% if (validationErrors.trigger_event) { %>
+                                <div class="invalid-feedback">
+                                    <%= validationErrors.trigger_event %>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <!-- Next Checklist Filename -->
+                        <div class="mb-3">
+                            <label for="next_checklist_filename" class="form-label">
+                                Next Checklist Filename <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control <%= validationErrors.next_checklist_filename ? 'is-invalid' : '' %>" 
+                                   id="next_checklist_filename" 
+                                   name="next_checklist_filename" 
+                                   value="<%= rule.next_checklist_filename || '' %>"
+                                   placeholder="e.g., 1_A_Cell_West_Side_Weekly.html"
+                                   required>
+                            <div class="form-text">
+                                The checklist file that should be assigned when this rule triggers.
+                            </div>
+                            <% if (validationErrors.next_checklist_filename) { %>
+                                <div class="invalid-feedback">
+                                    <%= validationErrors.next_checklist_filename %>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <!-- Assignment Logic Type -->
+                        <div class="mb-3">
+                            <label for="assignment_logic_type" class="form-label">
+                                Assignment Logic <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select <%= validationErrors.assignment_logic_type ? 'is-invalid' : '' %>" 
+                                    id="assignment_logic_type" 
+                                    name="assignment_logic_type" 
+                                    required
+                                    onchange="toggleAssignmentDetail()">
+                                <option value="">Select assignment logic...</option>
+                                <option value="SAME_USER" 
+                                        <%= rule.assignment_logic_type === 'SAME_USER' ? 'selected' : '' %>>
+                                    Same User (assign to the user who triggered this rule)
+                                </option>
+                                <option value="SPECIFIC_USER" 
+                                        <%= rule.assignment_logic_type === 'SPECIFIC_USER' ? 'selected' : '' %>>
+                                    Specific User (assign to a specific user ID)
+                                </option>
+                                <option value="ROLE_BASED_ROUND_ROBIN" 
+                                        <%= rule.assignment_logic_type === 'ROLE_BASED_ROUND_ROBIN' ? 'selected' : '' %>>
+                                    Role-Based Round Robin (coming soon)
+                                </option>
+                            </select>
+                            <% if (validationErrors.assignment_logic_type) { %>
+                                <div class="invalid-feedback">
+                                    <%= validationErrors.assignment_logic_type %>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <!-- Assignment Logic Detail -->
+                        <div class="mb-3" id="assignment_detail_group" style="display: none;">
+                            <label for="assignment_logic_detail" class="form-label">
+                                Assignment Detail
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="assignment_logic_detail" 
+                                   name="assignment_logic_detail" 
+                                   value="<%= rule.assignment_logic_detail || '' %>"
+                                   placeholder="Enter user ID or role name">
+                            <div class="form-text">
+                                For "Specific User": Enter the user ID. For "Role-Based": Enter the role name.
+                            </div>
+                        </div>
+
+                        <!-- Delay -->
+                        <div class="mb-3">
+                            <label for="delay_minutes_after_trigger" class="form-label">
+                                Delay (minutes)
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="delay_minutes_after_trigger" 
+                                   name="delay_minutes_after_trigger" 
+                                   value="<%= rule.delay_minutes_after_trigger || 0 %>"
+                                   min="0"
+                                   max="10080">
+                            <div class="form-text">
+                                How many minutes to wait before creating the assignment (0 = immediate).
+                            </div>
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="is_active" 
+                                       name="is_active"
+                                       <%= rule.is_active !== false ? 'checked' : '' %>>
+                                <label class="form-check-label" for="is_active">
+                                    Rule is active
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Inactive rules will not trigger any assignments.
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/admin/automation-rules" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                <%= isEdit ? 'Update Rule' : 'Create Rule' %>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAssignmentDetail() {
+    const logicType = document.getElementById('assignment_logic_type').value;
+    const detailGroup = document.getElementById('assignment_detail_group');
+    const detailInput = document.getElementById('assignment_logic_detail');
+    
+    if (logicType === 'SPECIFIC_USER' || logicType === 'ROLE_BASED_ROUND_ROBIN') {
+        detailGroup.style.display = 'block';
+        detailInput.required = true;
+        
+        if (logicType === 'SPECIFIC_USER') {
+            detailInput.placeholder = 'Enter user ID (e.g., user123)';
+        } else {
+            detailInput.placeholder = 'Enter role name (e.g., supervisor)';
+        }
+    } else {
+        detailGroup.style.display = 'none';
+        detailInput.required = false;
+        detailInput.value = '';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleAssignmentDetail();
+});
+</script>
+
+<%- include('../layouts/main-footer') %>

@@ -12,6 +12,8 @@ const path = require('path');
 const fs = require('fs');  // Import the file system module
 const http = require('http');
 const db = require('./config/db'); // Import PostgreSQL configuration
+const automationEngine = require('./automation/automationEngine'); // Import automation engine
+const AuditLogger = require('./utils/auditLogger'); // Import audit logger
 
 const nodemailer = require('nodemailer');  // Import nodemailer for sending emails
 const { loadSSLCertificates, createHTTPSServer, getSSLConfig } = require('./config/ssl');
@@ -277,12 +279,35 @@ app.post('/submit-form', apiLimiter, authenticateApi, asyncHandler(async (req, r
                 }
             }
         }
-        
-        // TODO: Log to AuditTrail (Phase 1 enhancement or Phase 2)
-        // TODO: Trigger Automation Engine (Phase 2)
+
+        // Log to AuditTrail
+        await AuditLogger.logSubmission(
+            req.user.userId,
+            submissionId,
+            'SUBMITTED',
+            {
+                checklistTitle: formData.title,
+                originalFilename: formData.original_checklist_filename || formData.title,
+                timestamp: timestamp,
+                totalTasks: Object.keys(formData.checkboxes || {}).length
+            },
+            client
+        );
 
         await client.query('COMMIT');
         console.log(`[DB] Successfully saved submission ${submissionId} to PostgreSQL.`);
+
+        // Trigger Automation Engine after successful database commit
+        try {
+            await automationEngine.processAutomationTrigger(
+                submissionId,
+                'ON_SUBMISSION_COMPLETE',
+                formData.original_checklist_filename || formData.title
+            );
+        } catch (automationError) {
+            console.error('[Automation] Error processing submission trigger:', automationError);
+            // Don't fail the submission if automation fails
+        }
     } catch (dbError) {
         await client.query('ROLLBACK');
         console.error('[DB] Error saving submission to PostgreSQL, transaction rolled back:', dbError);
@@ -496,36 +521,66 @@ app.post('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, 
     try {
         await client.query('BEGIN');
 
-        // 1. Insert into SupervisorValidationsLog
+        // 1. Update ChecklistSubmissions status
+        await client.query(
+            `UPDATE "ChecklistSubmissions" SET "status" = 'SupervisorValidated' WHERE "submission_id" = $1`,
+            [formData.submission_id]
+        );
+
+        // 2. Insert into SupervisorValidationsLog with new structure
         const validationRes = await client.query(
-            `INSERT INTO "SupervisorValidationsLog" ("submission_id", "validated_by_user_id", "validated_by_username", "overall_status", "comments")
-             VALUES ($1, $2, $3, $4, $5) RETURNING "validation_id"`,
+            `INSERT INTO "SupervisorValidationsLog" ("submission_id", "supervisor_name", "validated_items_summary")
+             VALUES ($1, $2, $3) RETURNING "validation_log_id"`,
             [
-                formData.submission_id, // Assuming you have submission_id in formData
-                req.user.userId,
-                req.user.username,
-                'OK', // Or derive from validationData
-                validationData.comments // Assuming you have comments in validationData
+                formData.submission_id,
+                validationData.supervisorName,
+                JSON.stringify(validationData.validatedCheckboxes)
             ]
         );
-        const validationId = validationRes.rows[0].validation_id;
+        const validationLogId = validationRes.rows[0].validation_log_id;
 
-        // 2. Log to AuditTrail
-        await client.query(
-            `INSERT INTO "AuditTrail" ("action_timestamp", "user_id", "username", "action_type", "description", "affected_record_id", "affected_table")
-             VALUES (NOW(), $1, $2, $3, $4, $5, $6)`,
-            [
-                req.user.userId,
-                req.user.username,
-                'Validation',
-                `Supervisor validated submission ${formData.submission_id}`,
-                validationId,
-                'SupervisorValidationsLog'
-            ]
+        // 3. Update individual task validation statuses
+        for (const validatedItem of validationData.validatedCheckboxes) {
+            await client.query(`
+                UPDATE "SubmissionTasks"
+                SET "supervisor_validated_status" = $1,
+                    "current_status" = CASE WHEN $1 = true THEN 'ValidatedOK' ELSE 'ValidatedNotOK' END,
+                    "last_status_update_timestamp" = NOW()
+                WHERE "heading_id" IN (
+                    SELECT "heading_id" FROM "SubmissionHeadings" WHERE "submission_id" = $2
+                ) AND "task_identifier_in_json" = $3
+            `, [validatedItem.checked, formData.submission_id, validatedItem.id]);
+        }
+
+        // 4. Log to AuditTrail
+        await AuditLogger.logValidation(
+            req.user.userId,
+            formData.submission_id,
+            'VALIDATED_BY_SUPERVISOR',
+            {
+                supervisorName: validationData.supervisorName,
+                validatedItemsCount: validationData.validatedCheckboxes.length,
+                validationLogId: validationLogId,
+                validatedItems: validationData.validatedCheckboxes
+            },
+            client
         );
 
         await client.query('COMMIT');
-        console.log(`[DB] Successfully saved validation data ${validationId} to PostgreSQL.`);
+        console.log(`[DB] Successfully saved validation data ${validationLogId} to PostgreSQL.`);
+
+        // Trigger Automation Engine after successful validation
+        try {
+            await automationEngine.processAutomationTrigger(
+                formData.submission_id,
+                'ON_SUPERVISOR_VALIDATION',
+                formData.original_checklist_filename || formData.title
+            );
+        } catch (automationError) {
+            console.error('[Automation] Error processing validation trigger:', automationError);
+            // Don't fail the validation if automation fails
+        }
+
     } catch (dbError) {
         await client.query('ROLLBACK');
         console.error('[DB] Error saving validation data to PostgreSQL, transaction rolled back:', dbError);
@@ -628,6 +683,272 @@ app.get('/view-checklist-html/:id', apiLimiter, authenticateApi, asyncHandler(as
     res.send(htmlContent);
 }));
 
+// User Assignment API Endpoints for Phase 2
+
+// Get user's active checklist assignments
+app.get('/api/user/assignments', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        const assignments = await db.query(`
+            SELECT
+                ca."assignment_id",
+                ca."assignment_timestamp",
+                ca."due_timestamp",
+                ca."status" as assignment_status,
+                cs."submission_id",
+                cs."checklist_title",
+                cs."original_checklist_filename",
+                cs."status" as submission_status,
+                cs."due_date",
+                ar."rule_id",
+                ar."source_checklist_filename_pattern"
+            FROM "ChecklistAssignments" ca
+            JOIN "ChecklistSubmissions" cs ON ca."submission_id" = cs."submission_id"
+            LEFT JOIN "AutomationRules" ar ON ca."automation_rule_id" = ar."rule_id"
+            WHERE ca."assigned_to_user_id" = $1
+            AND ca."status" IN ('Assigned', 'InProgress')
+            ORDER BY ca."due_timestamp" ASC, ca."assignment_timestamp" DESC
+        `, [userId]);
+
+        res.json({
+            success: true,
+            assignments: assignments.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching user assignments:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch assignments'
+        });
+    }
+}));
+
+// Get user's recent submissions
+app.get('/api/user/submissions', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = parseInt(req.query.offset) || 0;
+
+    try {
+        const submissions = await db.query(`
+            SELECT
+                cs."submission_id",
+                cs."checklist_title",
+                cs."original_checklist_filename",
+                cs."submission_timestamp",
+                cs."status",
+                cs."due_date",
+                svl."validation_timestamp",
+                svl."supervisor_name"
+            FROM "ChecklistSubmissions" cs
+            LEFT JOIN "SupervisorValidationsLog" svl ON cs."submission_id" = svl."submission_id"
+            WHERE cs."submitted_by_user_id" = $1
+            ORDER BY cs."submission_timestamp" DESC
+            LIMIT $2 OFFSET $3
+        `, [userId, limit, offset]);
+
+        const totalCount = await db.query(
+            'SELECT COUNT(*) as count FROM "ChecklistSubmissions" WHERE "submitted_by_user_id" = $1',
+            [userId]
+        );
+
+        res.json({
+            success: true,
+            submissions: submissions.rows,
+            total: parseInt(totalCount.rows[0].count),
+            limit,
+            offset
+        });
+    } catch (error) {
+        console.error('[API] Error fetching user submissions:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch submissions'
+        });
+    }
+}));
+
+// Get assignment details with tasks
+app.get('/api/assignments/:assignmentId', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const assignmentId = req.params.assignmentId;
+    const userId = req.user.userId;
+
+    try {
+        // Get assignment details
+        const assignment = await db.query(`
+            SELECT
+                ca.*,
+                cs."checklist_title",
+                cs."original_checklist_filename",
+                cs."status" as submission_status
+            FROM "ChecklistAssignments" ca
+            JOIN "ChecklistSubmissions" cs ON ca."submission_id" = cs."submission_id"
+            WHERE ca."assignment_id" = $1 AND ca."assigned_to_user_id" = $2
+        `, [assignmentId, userId]);
+
+        if (assignment.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Assignment not found'
+            });
+        }
+
+        // Get headings and tasks for this assignment
+        const headings = await db.query(`
+            SELECT
+                sh."heading_id",
+                sh."heading_text",
+                sh."display_order"
+            FROM "SubmissionHeadings" sh
+            WHERE sh."submission_id" = $1
+            ORDER BY sh."display_order"
+        `, [assignment.rows[0].submission_id]);
+
+        const tasks = await db.query(`
+            SELECT
+                st."task_id",
+                st."heading_id",
+                st."task_identifier_in_json",
+                st."task_label",
+                st."current_status",
+                st."is_checked_on_submission",
+                st."supervisor_validated_status",
+                st."comments",
+                st."last_status_update_timestamp"
+            FROM "SubmissionTasks" st
+            JOIN "SubmissionHeadings" sh ON st."heading_id" = sh."heading_id"
+            WHERE sh."submission_id" = $1
+            ORDER BY sh."display_order", st."task_id"
+        `, [assignment.rows[0].submission_id]);
+
+        // Group tasks by heading
+        const headingsWithTasks = headings.rows.map(heading => ({
+            ...heading,
+            tasks: tasks.rows.filter(task => task.heading_id === heading.heading_id)
+        }));
+
+        res.json({
+            success: true,
+            assignment: assignment.rows[0],
+            headings: headingsWithTasks
+        });
+    } catch (error) {
+        console.error('[API] Error fetching assignment details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch assignment details'
+        });
+    }
+}));
+
+// Update assignment status (e.g., mark as in progress)
+app.patch('/api/assignments/:assignmentId/status', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const assignmentId = req.params.assignmentId;
+    const userId = req.user.userId;
+    const { status } = req.body;
+
+    const validStatuses = ['Assigned', 'InProgress', 'SubmittedForValidation', 'Overdue'];
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid status'
+        });
+    }
+
+    try {
+        const result = await db.query(`
+            UPDATE "ChecklistAssignments"
+            SET "status" = $1, "updated_at" = NOW()
+            WHERE "assignment_id" = $2 AND "assigned_to_user_id" = $3
+            RETURNING *
+        `, [status, assignmentId, userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Assignment not found'
+            });
+        }
+
+        // Log the status change
+        await AuditLogger.logAssignment(
+            userId,
+            'ASSIGNMENT_STATUS_CHANGED',
+            {
+                assignmentId: assignmentId,
+                newStatus: status,
+                oldStatus: result.rows[0].status
+            }
+        );
+
+        res.json({
+            success: true,
+            assignment: result.rows[0]
+        });
+    } catch (error) {
+        console.error('[API] Error updating assignment status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update assignment status'
+        });
+    }
+}));
+
+// Get user dashboard statistics
+app.get('/api/user/stats', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        // Get active assignments count
+        const activeAssignments = await db.query(`
+            SELECT COUNT(*) as count
+            FROM "ChecklistAssignments"
+            WHERE "assigned_to_user_id" = $1 AND "status" IN ('Assigned', 'InProgress')
+        `, [userId]);
+
+        // Get overdue assignments count
+        const overdueAssignments = await db.query(`
+            SELECT COUNT(*) as count
+            FROM "ChecklistAssignments"
+            WHERE "assigned_to_user_id" = $1
+            AND "status" IN ('Assigned', 'InProgress')
+            AND "due_timestamp" < NOW()
+        `, [userId]);
+
+        // Get completed submissions this month
+        const completedThisMonth = await db.query(`
+            SELECT COUNT(*) as count
+            FROM "ChecklistSubmissions"
+            WHERE "submitted_by_user_id" = $1
+            AND "submission_timestamp" >= DATE_TRUNC('month', NOW())
+        `, [userId]);
+
+        // Get total submissions
+        const totalSubmissions = await db.query(`
+            SELECT COUNT(*) as count
+            FROM "ChecklistSubmissions"
+            WHERE "submitted_by_user_id" = $1
+        `, [userId]);
+
+        res.json({
+            success: true,
+            stats: {
+                activeAssignments: parseInt(activeAssignments.rows[0].count),
+                overdueAssignments: parseInt(overdueAssignments.rows[0].count),
+                completedThisMonth: parseInt(completedThisMonth.rows[0].count),
+                totalSubmissions: parseInt(totalSubmissions.rows[0].count)
+            }
+        });
+    } catch (error) {
+        console.error('[API] Error fetching user stats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch user statistics'
+        });
+    }
+}));
+
 // Health check routes
 app.use('/', require('./routes/health'));
 
@@ -648,12 +969,21 @@ if (sslConfig.enableSSL) {
 
     if (sslOptions) {
         // Start HTTPS server
-        const httpsServer = createHTTPSServer(app, sslOptions, HTTPS_PORT, () => {
+        const httpsServer = createHTTPSServer(app, sslOptions, HTTPS_PORT, async () => {
             console.log('Backend API HTTPS Server listener callback executed.');
             console.log(`[SSL] Backend API HTTPS Server is running on https://localhost:${HTTPS_PORT}`);
             console.log(`[SSL] SSL certificates loaded from:`);
             console.log(`[SSL] - Key: ${sslConfig.sslKeyPath}`);
             console.log(`[SSL] - Cert: ${sslConfig.sslCertPath}`);
+
+            // Log system startup
+            await AuditLogger.logSystem('SERVER_STARTED', {
+                port: HTTPS_PORT,
+                ssl: true,
+                sslKeyPath: sslConfig.sslKeyPath,
+                sslCertPath: sslConfig.sslCertPath,
+                timestamp: new Date().toISOString()
+            });
         });
 
         // Optionally start HTTP server for redirects
@@ -671,18 +1001,34 @@ if (sslConfig.enableSSL) {
         }
     } else {
         console.error('[SSL] Failed to load SSL certificates, falling back to HTTP');
-        const server = app.listen(PORT, '0.0.0.0', () => {
+        const server = app.listen(PORT, '0.0.0.0', async () => {
             console.log('Backend API Server listener callback executed.');
             console.log(`[HTTP] Backend API Server is running on http://localhost:${PORT} (SSL disabled due to certificate error)`);
+
+            // Log system startup
+            await AuditLogger.logSystem('SERVER_STARTED', {
+                port: PORT,
+                ssl: false,
+                reason: 'SSL certificate error',
+                timestamp: new Date().toISOString()
+            });
         });
 
         server.on('error', handleServerError);
     }
 } else {
     // Start HTTP server only
-    const server = app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, '0.0.0.0', async () => {
         console.log('Backend API Server listener callback executed.');
         console.log(`[HTTP] Backend API Server is running on http://localhost:${PORT} (SSL disabled)`);
+
+        // Log system startup
+        await AuditLogger.logSystem('SERVER_STARTED', {
+            port: PORT,
+            ssl: false,
+            reason: 'SSL disabled in configuration',
+            timestamp: new Date().toISOString()
+        });
     });
 
     server.on('error', handleServerError);
@@ -712,3 +1058,58 @@ function handleServerError(error) {
             throw error;
     }
 }
+
+// Handle graceful shutdown
+async function gracefulShutdown(signal) {
+    console.log(`[SHUTDOWN] Received ${signal}, shutting down gracefully...`);
+
+    try {
+        await AuditLogger.logSystem('SERVER_SHUTDOWN', {
+            signal: signal,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('[SHUTDOWN] Failed to log shutdown event:', error);
+    }
+
+    process.exit(0);
+}
+
+// Register shutdown handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // nodemon restart
+
+// Handle uncaught exceptions
+process.on('uncaughtException', async (error) => {
+    console.error('[FATAL] Uncaught Exception:', error);
+
+    try {
+        await AuditLogger.logSystem('SERVER_ERROR', {
+            error: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+    } catch (logError) {
+        console.error('[FATAL] Failed to log uncaught exception:', logError);
+    }
+
+    process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', async (reason, promise) => {
+    console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
+
+    try {
+        await AuditLogger.logSystem('SERVER_ERROR', {
+            error: 'Unhandled Promise Rejection',
+            reason: reason.toString(),
+            timestamp: new Date().toISOString()
+        });
+    } catch (logError) {
+        console.error('[FATAL] Failed to log unhandled rejection:', logError);
+    }
+
+    process.exit(1);
+});

@@ -5,6 +5,7 @@ const { getSecurityQuestions, getSecurityQuestionById } = require('../utils/auth
 const User = require('../models/user'); // Needed for checking username existence, etc.
 const { hashPassword, hashAnswer } = require('../utils/auth');
 const lusca = require('lusca');
+const AuditLogger = require('../../backend/utils/auditLogger'); // Import audit logger
 
 // Import PostgreSQL database connection
 const { Pool } = require('pg');
@@ -311,6 +312,294 @@ router.get('/postgresql/submissions/:id', ensureAuthenticated, ensureAdmin, asyn
     req.flash('error', 'Failed to load submission details.');
     res.redirect('/admin/postgresql/submissions');
   }
+});
+
+// Automation Rules Management Routes
+
+// View all automation rules
+router.get('/automation-rules', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    const rules = await pgPool.query(`
+      SELECT * FROM "AutomationRules"
+      ORDER BY "rule_id" DESC
+    `);
+
+    res.render('admin/automation-rules', {
+      title: 'Automation Rules Management',
+      user: req.user,
+      rules: rules.rows,
+      successMessage: req.flash('success'),
+      errorMessage: req.flash('error')
+    });
+  } catch (error) {
+    console.error('[Admin Automation Rules] Error:', error);
+    req.flash('error', 'Failed to load automation rules.');
+    res.redirect('/admin');
+  }
+});
+
+// Show form to create new automation rule
+router.get('/automation-rules/new', ensureAuthenticated, ensureAdmin, lusca.csrf(), (req, res) => {
+  res.render('admin/automation-rule-form', {
+    title: 'Create New Automation Rule',
+    user: req.user,
+    rule: {}, // Empty rule for new creation
+    isEdit: false,
+    errorMessages: req.flash('error'),
+    validationErrors: {},
+    _csrf: req.csrfToken()
+  });
+});
+
+// Create new automation rule
+router.post('/automation-rules', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
+  const {
+    source_checklist_filename_pattern,
+    trigger_event,
+    next_checklist_filename,
+    assignment_logic_type,
+    assignment_logic_detail,
+    delay_minutes_after_trigger,
+    is_active
+  } = req.body;
+
+  let validationErrors = {};
+
+  // Basic validation
+  if (!source_checklist_filename_pattern || source_checklist_filename_pattern.trim() === '') {
+    validationErrors.source_checklist_filename_pattern = 'Source checklist pattern is required.';
+  }
+  if (!trigger_event) {
+    validationErrors.trigger_event = 'Trigger event is required.';
+  }
+  if (!next_checklist_filename || next_checklist_filename.trim() === '') {
+    validationErrors.next_checklist_filename = 'Next checklist filename is required.';
+  }
+  if (!assignment_logic_type) {
+    validationErrors.assignment_logic_type = 'Assignment logic type is required.';
+  }
+
+  if (Object.keys(validationErrors).length > 0) {
+    return res.render('admin/automation-rule-form', {
+      title: 'Create New Automation Rule',
+      user: req.user,
+      rule: req.body,
+      isEdit: false,
+      errorMessages: req.flash('error'),
+      validationErrors,
+      _csrf: req.csrfToken()
+    });
+  }
+
+  try {
+    const result = await pgPool.query(`
+      INSERT INTO "AutomationRules" (
+        "source_checklist_filename_pattern",
+        "trigger_event",
+        "next_checklist_filename",
+        "assignment_logic_type",
+        "assignment_logic_detail",
+        "delay_minutes_after_trigger",
+        "is_active"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING "rule_id"
+    `, [
+      source_checklist_filename_pattern.trim(),
+      trigger_event,
+      next_checklist_filename.trim(),
+      assignment_logic_type,
+      assignment_logic_detail || null,
+      parseInt(delay_minutes_after_trigger) || 0,
+      is_active === 'on'
+    ]);
+
+    const newRuleId = result.rows[0].rule_id;
+
+    // Log the automation rule creation
+    await AuditLogger.logAutomationRule(
+      req.user.userId,
+      'AUTOMATION_RULE_CREATED',
+      newRuleId,
+      {
+        source_checklist_filename_pattern: source_checklist_filename_pattern.trim(),
+        trigger_event,
+        next_checklist_filename: next_checklist_filename.trim(),
+        assignment_logic_type,
+        assignment_logic_detail: assignment_logic_detail || null,
+        delay_minutes_after_trigger: parseInt(delay_minutes_after_trigger) || 0,
+        is_active: is_active === 'on'
+      }
+    );
+
+    req.flash('success', 'Automation rule created successfully.');
+    res.redirect('/admin/automation-rules');
+  } catch (error) {
+    console.error('[Admin Create Automation Rule] Error:', error);
+    req.flash('error', 'Failed to create automation rule.');
+    res.render('admin/automation-rule-form', {
+      title: 'Create New Automation Rule',
+      user: req.user,
+      rule: req.body,
+      isEdit: false,
+      errorMessages: req.flash('error'),
+      validationErrors: {},
+      _csrf: req.csrfToken()
+    });
+  }
+});
+
+// Show form to edit automation rule
+router.get('/automation-rules/:id/edit', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
+  try {
+    const ruleId = req.params.id;
+    const rule = await pgPool.query('SELECT * FROM "AutomationRules" WHERE "rule_id" = $1', [ruleId]);
+
+    if (rule.rows.length === 0) {
+      req.flash('error', 'Automation rule not found.');
+      return res.redirect('/admin/automation-rules');
+    }
+
+    res.render('admin/automation-rule-form', {
+      title: 'Edit Automation Rule',
+      user: req.user,
+      rule: rule.rows[0],
+      isEdit: true,
+      errorMessages: req.flash('error'),
+      validationErrors: {},
+      _csrf: req.csrfToken()
+    });
+  } catch (error) {
+    console.error('[Admin Edit Automation Rule] Error:', error);
+    req.flash('error', 'Failed to load automation rule.');
+    res.redirect('/admin/automation-rules');
+  }
+});
+
+// Update automation rule
+router.post('/automation-rules/:id', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
+  const ruleId = req.params.id;
+  const {
+    source_checklist_filename_pattern,
+    trigger_event,
+    next_checklist_filename,
+    assignment_logic_type,
+    assignment_logic_detail,
+    delay_minutes_after_trigger,
+    is_active
+  } = req.body;
+
+  let validationErrors = {};
+
+  // Basic validation
+  if (!source_checklist_filename_pattern || source_checklist_filename_pattern.trim() === '') {
+    validationErrors.source_checklist_filename_pattern = 'Source checklist pattern is required.';
+  }
+  if (!trigger_event) {
+    validationErrors.trigger_event = 'Trigger event is required.';
+  }
+  if (!next_checklist_filename || next_checklist_filename.trim() === '') {
+    validationErrors.next_checklist_filename = 'Next checklist filename is required.';
+  }
+  if (!assignment_logic_type) {
+    validationErrors.assignment_logic_type = 'Assignment logic type is required.';
+  }
+
+  if (Object.keys(validationErrors).length > 0) {
+    return res.render('admin/automation-rule-form', {
+      title: 'Edit Automation Rule',
+      user: req.user,
+      rule: { ...req.body, rule_id: ruleId },
+      isEdit: true,
+      errorMessages: req.flash('error'),
+      validationErrors,
+      _csrf: req.csrfToken()
+    });
+  }
+
+  try {
+    // Get the old rule data for audit logging
+    const oldRuleResult = await pgPool.query('SELECT * FROM "AutomationRules" WHERE "rule_id" = $1', [ruleId]);
+    const oldRule = oldRuleResult.rows[0];
+
+    await pgPool.query(`
+      UPDATE "AutomationRules" SET
+        "source_checklist_filename_pattern" = $1,
+        "trigger_event" = $2,
+        "next_checklist_filename" = $3,
+        "assignment_logic_type" = $4,
+        "assignment_logic_detail" = $5,
+        "delay_minutes_after_trigger" = $6,
+        "is_active" = $7,
+        "updated_at" = NOW()
+      WHERE "rule_id" = $8
+    `, [
+      source_checklist_filename_pattern.trim(),
+      trigger_event,
+      next_checklist_filename.trim(),
+      assignment_logic_type,
+      assignment_logic_detail || null,
+      parseInt(delay_minutes_after_trigger) || 0,
+      is_active === 'on',
+      ruleId
+    ]);
+
+    // Log the automation rule update
+    await AuditLogger.logAutomationRule(
+      req.user.userId,
+      'AUTOMATION_RULE_UPDATED',
+      ruleId,
+      {
+        oldValues: oldRule,
+        newValues: {
+          source_checklist_filename_pattern: source_checklist_filename_pattern.trim(),
+          trigger_event,
+          next_checklist_filename: next_checklist_filename.trim(),
+          assignment_logic_type,
+          assignment_logic_detail: assignment_logic_detail || null,
+          delay_minutes_after_trigger: parseInt(delay_minutes_after_trigger) || 0,
+          is_active: is_active === 'on'
+        }
+      }
+    );
+
+    req.flash('success', 'Automation rule updated successfully.');
+    res.redirect('/admin/automation-rules');
+  } catch (error) {
+    console.error('[Admin Update Automation Rule] Error:', error);
+    req.flash('error', 'Failed to update automation rule.');
+    res.redirect(`/admin/automation-rules/${ruleId}/edit`);
+  }
+});
+
+// Delete automation rule
+router.post('/automation-rules/:id/delete', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
+  try {
+    const ruleId = req.params.id;
+
+    // Get the rule data before deletion for audit logging
+    const ruleResult = await pgPool.query('SELECT * FROM "AutomationRules" WHERE "rule_id" = $1', [ruleId]);
+    const deletedRule = ruleResult.rows[0];
+
+    await pgPool.query('DELETE FROM "AutomationRules" WHERE "rule_id" = $1', [ruleId]);
+
+    // Log the automation rule deletion
+    if (deletedRule) {
+      await AuditLogger.logAutomationRule(
+        req.user.userId,
+        'AUTOMATION_RULE_DELETED',
+        ruleId,
+        {
+          deletedRule: deletedRule
+        }
+      );
+    }
+
+    req.flash('success', 'Automation rule deleted successfully.');
+  } catch (error) {
+    console.error('[Admin Delete Automation Rule] Error:', error);
+    req.flash('error', 'Failed to delete automation rule.');
+  }
+  res.redirect('/admin/automation-rules');
 });
 
 module.exports = router;

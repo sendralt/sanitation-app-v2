@@ -59,31 +59,17 @@ COMMENT ON COLUMN "SubmissionTasks"."supervisor_validated_status" IS 'Status aft
 -- SupervisorValidationsLog Table
 -- Logs supervisor validations of checklist submissions.
 CREATE TABLE "SupervisorValidationsLog" (
-    "validation_id" SERIAL PRIMARY KEY,
+    "validation_log_id" SERIAL PRIMARY KEY,
     "submission_id" INTEGER NOT NULL REFERENCES "ChecklistSubmissions"("submission_id") ON DELETE CASCADE,
-    "validated_by_user_id" INTEGER,    -- Supervisor's User ID from JWT
-    "validated_by_username" TEXT,      -- Supervisor's Username from JWT
+    "supervisor_name" TEXT,             -- Supervisor's name from validation form
     "validation_timestamp" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    "overall_status" VARCHAR(20),       -- e.g., 'OK', 'NotOK', 'NeedsReview'
-    "comments" TEXT,                    -- Overall comments on the submission
+    "validated_items_summary" JSONB,    -- JSON storing the state of items the supervisor explicitly validated
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- AuditTrail Table
--- Generic audit log for tracking actions performed on the system.
-CREATE TABLE "AuditTrail" (
-    "audit_id" SERIAL PRIMARY KEY,
-    "action_timestamp" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    "user_id" INTEGER,              -- User ID performing the action (if applicable)
-    "username" TEXT,                -- Username performing the action (if applicable)
-    "action_type" VARCHAR(50) NOT NULL, -- e.g., 'Submission', 'Validation', 'Assignment', 'StatusUpdate'
-    "description" TEXT,             -- Detailed description of the action
-    "affected_record_id" INTEGER,   -- ID of the record affected by the action (e.g., submission_id, task_id)
-    "affected_table" VARCHAR(50),    -- Table affected by the action (e.g., "ChecklistSubmissions", "SubmissionTasks")
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+COMMENT ON TABLE "SupervisorValidationsLog" IS 'Logs supervisor validations with detailed item-level validation data';
+COMMENT ON COLUMN "SupervisorValidationsLog"."validated_items_summary" IS 'JSON payload containing detailed validation results for each item';
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_checklistsubmissions_status ON "ChecklistSubmissions"("status");
@@ -108,11 +94,6 @@ EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_supervisorvalidationslog_updated_at
 BEFORE UPDATE ON "SupervisorValidationsLog"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_audittrail_updated_at
-BEFORE UPDATE ON "AuditTrail"
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
@@ -151,8 +132,83 @@ JOIN "ChecklistSubmissions" cs ON cs."submission_id" = curr_heading."submission_
 WHERE cs."json_file_path" = 'backend/data/data_1625000000000.json' AND curr_heading."heading_text" = 'Wipe Around Door, Dock Lock Boxes, Trac Guards, and Frames Daily A West';
 */
 
+-- AutomationRules Table
+-- Stores rules for automated checklist assignments
+CREATE TABLE "AutomationRules" (
+    "rule_id" SERIAL PRIMARY KEY,
+    "source_checklist_filename_pattern" TEXT NOT NULL, -- e.g., "1_A_Cell_West_Side_Daily.html", or patterns like "%_Daily.html"
+    "trigger_event" VARCHAR(50) NOT NULL, -- e.g., 'ON_SUBMISSION_COMPLETE', 'ON_SUPERVISOR_VALIDATION'
+    "next_checklist_filename" TEXT NOT NULL, -- filename of the checklist to assign
+    "assignment_logic_type" VARCHAR(50) NOT NULL, -- e.g., 'SAME_USER', 'SPECIFIC_USER', 'ROLE_BASED_ROUND_ROBIN'
+    "assignment_logic_detail" TEXT, -- e.g., specific user_id, role name
+    "delay_minutes_after_trigger" INTEGER DEFAULT 0,
+    "is_active" BOOLEAN DEFAULT TRUE,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "AutomationRules" IS 'Rules for automated checklist assignments based on triggers';
+COMMENT ON COLUMN "AutomationRules"."source_checklist_filename_pattern" IS 'Pattern to match source checklist filenames (supports wildcards)';
+COMMENT ON COLUMN "AutomationRules"."trigger_event" IS 'Event that triggers this rule (ON_SUBMISSION_COMPLETE, ON_SUPERVISOR_VALIDATION)';
+COMMENT ON COLUMN "AutomationRules"."assignment_logic_type" IS 'How to determine the assignee (SAME_USER, SPECIFIC_USER, ROLE_BASED_ROUND_ROBIN)';
+
+-- ChecklistAssignments Table
+-- Tracks who is actively working on an assigned checklist instance that was created by automation
+CREATE TABLE "ChecklistAssignments" (
+    "assignment_id" SERIAL PRIMARY KEY,
+    "submission_id" INTEGER NOT NULL REFERENCES "ChecklistSubmissions"("submission_id") ON DELETE CASCADE,
+    "assigned_to_user_id" TEXT NOT NULL, -- User ID this specific instance is assigned to
+    "assignment_timestamp" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "due_timestamp" TIMESTAMPTZ,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'Assigned', -- e.g., 'Assigned', 'InProgress', 'SubmittedForValidation', 'Overdue'
+    "automation_rule_id" INTEGER REFERENCES "AutomationRules"("rule_id"), -- Optional: if assigned by automation
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "ChecklistAssignments" IS 'Tracks active checklist assignments created by automation or manual assignment';
+COMMENT ON COLUMN "ChecklistAssignments"."status" IS 'Current status of the assignment (Assigned, InProgress, SubmittedForValidation, Overdue)';
+
+-- AuditTrail Table
+-- Logs all significant events with user, timestamp, and details
+CREATE TABLE "AuditTrail" (
+    "log_id" SERIAL PRIMARY KEY,
+    "timestamp" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "submission_id" INTEGER REFERENCES "ChecklistSubmissions"("submission_id"), -- nullable
+    "user_id" TEXT, -- nullable, who performed the action
+    "action_type" VARCHAR(100) NOT NULL, -- e.g., 'SUBMITTED', 'VALIDATED_BY_SUPERVISOR', 'ASSIGNED_BY_AUTOMATION', 'TASK_STATUS_CHANGED', 'AUTOMATION_RULE_CREATED'
+    "details" JSONB, -- for storing relevant payload or changes
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "AuditTrail" IS 'Comprehensive audit log of all significant system events';
+COMMENT ON COLUMN "AuditTrail"."action_type" IS 'Type of action performed (SUBMITTED, VALIDATED_BY_SUPERVISOR, ASSIGNED_BY_AUTOMATION, etc.)';
+COMMENT ON COLUMN "AuditTrail"."details" IS 'JSON payload with additional context about the action';
+
+-- Additional indexes for Phase 2 tables
+CREATE INDEX IF NOT EXISTS idx_automationrules_active ON "AutomationRules"("is_active");
+CREATE INDEX IF NOT EXISTS idx_automationrules_trigger ON "AutomationRules"("trigger_event");
+CREATE INDEX IF NOT EXISTS idx_checklistassignments_assigned_user ON "ChecklistAssignments"("assigned_to_user_id");
+CREATE INDEX IF NOT EXISTS idx_checklistassignments_status ON "ChecklistAssignments"("status");
+CREATE INDEX IF NOT EXISTS idx_audittrail_timestamp ON "AuditTrail"("timestamp");
+CREATE INDEX IF NOT EXISTS idx_audittrail_action_type ON "AuditTrail"("action_type");
+CREATE INDEX IF NOT EXISTS idx_audittrail_user_id ON "AuditTrail"("user_id");
+
+-- Add triggers for updated_at columns on new tables
+CREATE TRIGGER update_automationrules_updated_at
+BEFORE UPDATE ON "AutomationRules"
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_checklistassignments_updated_at
+BEFORE UPDATE ON "ChecklistAssignments"
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- Note: AuditTrail doesn't need an updated_at trigger since it's append-only
+
 SELECT 'Initial schema created successfully.' AS message;
 
 -- Modify the ChecklistSubmissions table to accept UUIDs for user IDs
-ALTER TABLE "ChecklistSubmissions" 
+ALTER TABLE "ChecklistSubmissions"
 ALTER COLUMN "submitted_by_user_id" TYPE TEXT;
