@@ -466,7 +466,7 @@
                         backendApiUrl = window.AppConfig.getBackendApiUrl();
                     } else {
                         // Fallback if config module is not available
-                        backendApiUrl = 'https://dot1hundred.com/api';
+                        backendApiUrl = 'http://localhost:3001';
                         console.warn('[loadChecklistData] Config module not available, using fallback URL');
                     }
                 } catch (error) {
@@ -687,7 +687,7 @@
                             backendApiUrl = window.AppConfig.getBackendApiUrl();
                         } else {
                             // Fallback if config module is not available
-                            backendApiUrl = 'https://dot1hundred.com/api';
+                            backendApiUrl = 'http://localhost:3001';
                             console.warn('[submitValidation] Config module not available, using fallback URL');
                         }
                     } catch (error) {

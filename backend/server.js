@@ -237,7 +237,7 @@ app.post('/submit-form', apiLimiter, authenticateApi, asyncHandler(async (req, r
             [
                 formData.original_checklist_filename || formData.title, // Use original_checklist_filename if available, else title
                 formData.title,
-                req.user.userId, // Assuming JWT payload has userId
+                req.user.userId.toString(), // Convert UUID to string
                 req.user.username, // Assuming JWT payload has username
                 'PendingSupervisorValidation',
                 filePath
@@ -417,7 +417,8 @@ app.get('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, r
         checkboxes: formData.checkboxes,
         randomCheckboxes: formData.randomCheckboxes,
         isAlreadyValidated: isAlreadyValidated,
-        supervisorValidation: isAlreadyValidated ? formData.supervisorValidation : null
+        supervisorValidation: isAlreadyValidated ? formData.supervisorValidation : null,
+        submission_id: formData.submission_id // Include submission_id in the response
     });
 
     console.log(`[Debug] GET /validate/:id - END - ID: ${req.params.id}, Already Validated: ${isAlreadyValidated}`);

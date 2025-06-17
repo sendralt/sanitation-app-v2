@@ -11,7 +11,7 @@ CREATE TABLE "ChecklistSubmissions" (
     "submission_id" SERIAL PRIMARY KEY,
     "original_checklist_filename" TEXT, -- e.g., "1_A_Cell_West_Side_Daily.html"
     "checklist_title" TEXT,             -- Title of the checklist, e.g., "1-A Cell West Side Daily"
-    "submitted_by_user_id" INTEGER,     -- User ID from JWT who originally submitted (if applicable)
+    "submitted_by_user_id" TEXT,        -- User ID from JWT who originally submitted (if applicable)
     "submitted_by_username" TEXT,       -- Username from JWT (if applicable)
     "submission_timestamp" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     "status" VARCHAR(50) NOT NULL DEFAULT 'Pending', -- e.g., 'Pending', 'Assigned', 'InProgress', 'PendingSupervisorValidation', 'SupervisorValidated', 'Completed', 'Overdue'
@@ -152,3 +152,7 @@ WHERE cs."json_file_path" = 'backend/data/data_1625000000000.json' AND curr_head
 */
 
 SELECT 'Initial schema created successfully.' AS message;
+
+-- Modify the ChecklistSubmissions table to accept UUIDs for user IDs
+ALTER TABLE "ChecklistSubmissions" 
+ALTER COLUMN "submitted_by_user_id" TYPE TEXT;

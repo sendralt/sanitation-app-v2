@@ -276,7 +276,7 @@ app.get('/forgot-password', lusca.csrf(), (req, res) => {
 app.get('/api/config', (req, res) => {
   console.log('[DEBUG] SUPERVISOR_EMAIL env var:', process.env.SUPERVISOR_EMAIL);
   const config = {
-    backendApiUrl: process.env.BACKEND_API_URL || 'http://localhost:3001',
+    backendApiUrl: 'http://localhost:3001',
     supervisorEmail: process.env.SUPERVISOR_EMAIL || 'sendral.ts.1@pg.com',
     environment: process.env.NODE_ENV || 'development',
     version: require('./package.json').version
