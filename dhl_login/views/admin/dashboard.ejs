@@ -1,4 +1,3 @@
-<%- contentFor('head') %>
 <style>
   .admin-dashboard {
     max-width: 1200px;
@@ -254,6 +253,24 @@
         </a>
         <a href="/admin/logs" class="btn btn-secondary">
           📝 System Logs
+        </a>
+      </div>
+    </div>
+
+    <div class="dashboard-card">
+      <div class="card-header">
+        <div class="card-icon">🗄️</div>
+        <h3 class="card-title">PostgreSQL Data</h3>
+      </div>
+      <p class="card-description">
+        View and analyze checklist submissions, validations, and audit trails stored in the PostgreSQL database.
+      </p>
+      <div class="card-actions">
+        <a href="/admin/postgresql" class="btn btn-primary">
+          📊 PostgreSQL Dashboard
+        </a>
+        <a href="/admin/postgresql/submissions" class="btn btn-secondary">
+          📋 View Submissions
         </a>
       </div>
     </div>
