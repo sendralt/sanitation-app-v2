@@ -297,6 +297,15 @@ app.use('/admin', (req, res, next) => {
   next();
 }, require('./routes/admin')); // Mount Admin routes
 
+// --- Manager Routes ---
+app.use('/manager', (req, res, next) => {
+  console.log(`[Manager Route Middleware] ${req.method} ${req.originalUrl} - User authenticated: ${req.isAuthenticated ? req.isAuthenticated() : false}`);
+  if (req.user) {
+    console.log(`[Manager Route Middleware] User: ${req.user.username}, role: ${req.user.role}`);
+  }
+  next();
+}, require('./routes/manager')); // Mount Manager routes
+
 // --- Other Protected Routes ---
 app.use('/checklists', require('./routes/checklist')); // protected
 

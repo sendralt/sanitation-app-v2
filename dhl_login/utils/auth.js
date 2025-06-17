@@ -13,6 +13,10 @@ function generateToken(user) {
   const payload = {
     userId: user.id,
     username: user.username,
+    role: user.role || (user.isAdmin ? 'admin' : 'user'),
+    isAdmin: user.isAdmin || false,
+    managerId: user.managerId || null,
+    department: user.department || null,
   };
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }); // Example: 1 hour expiration
 }

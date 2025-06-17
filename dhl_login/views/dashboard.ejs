@@ -277,7 +277,31 @@
       </div>
     </div>
 
-    <% if (user && user.isAdmin) { %>
+    <% if (user && (user.role === 'manager' || user.role === 'admin' || user.isAdmin)) { %>
+    <!-- Manager Panel -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <span class="card-icon">👥</span>
+        <h3 class="card-title">Manager Panel</h3>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <a href="/manager" class="btn btn-secondary">
+          <i class="fas fa-users"></i> Manager Dashboard
+        </a>
+        <a href="/manager/teams" class="btn btn-secondary">
+          <i class="fas fa-users-cog"></i> Team Management
+        </a>
+        <a href="/manager/performance" class="btn btn-secondary">
+          <i class="fas fa-chart-line"></i> Performance Analytics
+        </a>
+        <a href="/manager/assignments" class="btn btn-secondary">
+          <i class="fas fa-tasks"></i> Manual Assignments
+        </a>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (user && (user.role === 'admin' || user.isAdmin)) { %>
     <!-- Admin Panel -->
     <div class="dashboard-card">
       <div class="card-header">

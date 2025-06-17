@@ -62,6 +62,23 @@ User.init({
     defaultValue: false,
     allowNull: false,
   },
+  role: {
+    type: DataTypes.ENUM('user', 'manager', 'admin'),
+    defaultValue: 'user',
+    allowNull: false,
+  },
+  managerId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'Users',
+      key: 'id'
+    }
+  },
+  department: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   // createdAt and updatedAt are automatically managed by Sequelize by default
 }, {
   sequelize,
@@ -69,5 +86,50 @@ User.init({
   // tableName: 'users', // Optional: by default, Sequelize pluralizes the model name
   timestamps: true, // This enables createdAt and updatedAt
 });
+
+// Define associations
+User.associate = function(models) {
+  // Self-referencing association for manager-employee relationship
+  User.belongsTo(User, {
+    as: 'manager',
+    foreignKey: 'managerId',
+    allowNull: true
+  });
+
+  User.hasMany(User, {
+    as: 'directReports',
+    foreignKey: 'managerId'
+  });
+};
+
+// Instance methods
+User.prototype.isManager = function() {
+  return this.role === 'manager' || this.role === 'admin';
+};
+
+User.prototype.canManageUser = function(targetUserId) {
+  if (this.role === 'admin') return true;
+  if (this.role === 'manager') {
+    // Can manage direct reports
+    return this.directReports && this.directReports.some(user => user.id === targetUserId);
+  }
+  return false;
+};
+
+// Class methods
+User.findByRole = function(role) {
+  return this.findAll({ where: { role } });
+};
+
+User.findManagersWithTeams = function() {
+  return this.findAll({
+    where: { role: ['manager', 'admin'] },
+    include: [{
+      model: User,
+      as: 'directReports',
+      attributes: ['id', 'username', 'firstName', 'lastName', 'role']
+    }]
+  });
+};
 
 module.exports = User;

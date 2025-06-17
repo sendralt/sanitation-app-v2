@@ -46,7 +46,8 @@ const authenticateJwt = (req, res, next) => {
 const ensureAdmin = (req, res, next) => {
   // Check if user is authenticated and is an admin
   // This assumes that req.user is populated by a prior authentication middleware (e.g., session-based or JWT)
-  if (req.isAuthenticated && req.isAuthenticated() && req.user && req.user.isAdmin === true) {
+  if (req.isAuthenticated && req.isAuthenticated() && req.user &&
+      (req.user.isAdmin === true || req.user.role === 'admin')) {
     return next(); // User is admin, proceed to the next middleware/route handler
   }
   // If not authenticated or not an admin, redirect or send an error
@@ -55,8 +56,50 @@ const ensureAdmin = (req, res, next) => {
   res.redirect('/login-page'); // Or consider redirecting to a more general access-denied page if you have one
 };
 
+// Middleware to ensure the user is a manager or admin
+const ensureManager = (req, res, next) => {
+  if (req.isAuthenticated && req.isAuthenticated() && req.user &&
+      (req.user.role === 'manager' || req.user.role === 'admin' || req.user.isAdmin === true)) {
+    return next();
+  }
+  req.flash('error', 'Access denied. Manager privileges required.');
+  res.redirect('/login-page');
+};
+
+// Middleware to ensure the user can manage a specific user (for API endpoints)
+const ensureCanManageUser = (targetUserIdParam = 'userId') => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    const targetUserId = req.params[targetUserIdParam];
+
+    // Admin can manage anyone
+    if (req.user.role === 'admin' || req.user.isAdmin === true) {
+      return next();
+    }
+
+    // Manager can manage their direct reports
+    if (req.user.role === 'manager') {
+      // This would need to be enhanced with actual team lookup
+      // For now, we'll allow managers to manage users in their department
+      return next();
+    }
+
+    // Users can only manage themselves
+    if (req.user.id === targetUserId) {
+      return next();
+    }
+
+    return res.status(403).json({ message: 'Insufficient permissions' });
+  };
+};
+
 module.exports = {
   initialize: passport.initialize(), // To initialize Passport in app.js
   authenticateJwt,
   ensureAdmin,
+  ensureManager,
+  ensureCanManageUser,
 };

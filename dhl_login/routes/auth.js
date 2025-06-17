@@ -123,7 +123,14 @@ router.post('/login-api', authApiLimiter, asyncHandler(async (req, res) => {
     res.status(200).json({
         message: 'Login successful.',
         token,
-        user: { id: user.id, username: user.username },
+        user: {
+            id: user.id,
+            username: user.username,
+            role: user.role || (user.isAdmin ? 'admin' : 'user'),
+            isAdmin: user.isAdmin || false,
+            managerId: user.managerId || null,
+            department: user.department || null
+        },
     });
 }));
 
@@ -303,7 +310,10 @@ router.get('/issue-jwt-for-session', (req, res) => {
             user: {
                 id: user.id,
                 username: user.username,
-                // Add other relevant user details from req.user if they exist and are needed
+                role: user.role || (user.isAdmin ? 'admin' : 'user'),
+                isAdmin: user.isAdmin || false,
+                managerId: user.managerId || null,
+                department: user.department || null
             }
         });
     } catch (error) {
@@ -332,7 +342,10 @@ router.post('/token', (req, res) => {
                 username: user.username,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                isAdmin: user.isAdmin
+                isAdmin: user.isAdmin,
+                role: user.role || (user.isAdmin ? 'admin' : 'user'),
+                managerId: user.managerId || null,
+                department: user.department || null
             }
         });
     } catch (error) {

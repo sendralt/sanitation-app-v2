@@ -139,6 +139,95 @@ class AuditLogger {
     }
 
     /**
+     * Log team management events (Phase 3)
+     */
+    static async logTeamManagement(userId, actionType, details = {}) {
+        return this.log(userId, actionType, {
+            category: 'team_management',
+            ...details
+        });
+    }
+
+    /**
+     * Log manager actions (Phase 3)
+     */
+    static async logManagerAction(userId, actionType, details = {}) {
+        return this.log(userId, actionType, {
+            category: 'manager_action',
+            managerUserId: userId,
+            ...details
+        });
+    }
+
+    /**
+     * Log user role changes (Phase 3)
+     */
+    static async logRoleChange(adminUserId, targetUserId, oldRole, newRole, details = {}) {
+        return this.log(adminUserId, 'USER_ROLE_CHANGED', {
+            category: 'user_management',
+            targetUserId,
+            oldRole,
+            newRole,
+            ...details
+        });
+    }
+
+    /**
+     * Log manual assignment events (Phase 3)
+     */
+    static async logManualAssignment(managerId, assignedUserId, checklistId, details = {}) {
+        return this.log(managerId, 'MANUAL_ASSIGNMENT_CREATED', {
+            category: 'manual_assignment',
+            assignedUserId,
+            checklistId,
+            ...details
+        });
+    }
+
+    /**
+     * Log dashboard access events (Phase 3)
+     */
+    static async logDashboardAccess(userId, dashboardType, details = {}) {
+        return this.log(userId, 'DASHBOARD_ACCESSED', {
+            category: 'dashboard_access',
+            dashboardType, // 'user', 'manager', 'admin'
+            ...details
+        });
+    }
+
+    /**
+     * Log performance analytics access (Phase 3)
+     */
+    static async logAnalyticsAccess(userId, analyticsType, details = {}) {
+        return this.log(userId, 'ANALYTICS_ACCESSED', {
+            category: 'analytics_access',
+            analyticsType,
+            ...details
+        });
+    }
+
+    /**
+     * Log compliance events (Phase 3)
+     */
+    static async logCompliance(userId, actionType, details = {}) {
+        return this.log(userId, actionType, {
+            category: 'compliance',
+            ...details
+        });
+    }
+
+    /**
+     * Log data export events (Phase 3)
+     */
+    static async logDataExport(userId, exportType, details = {}) {
+        return this.log(userId, 'DATA_EXPORTED', {
+            category: 'data_export',
+            exportType,
+            ...details
+        });
+    }
+
+    /**
      * Get audit trail for a specific submission
      */
     static async getSubmissionAuditTrail(submissionId, limit = 50) {
@@ -209,6 +298,118 @@ class AuditLogger {
             return result.rows;
         } catch (error) {
             console.error('[Audit] Failed to get recent audit events:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get audit trail by category (Phase 3)
+     */
+    static async getAuditByCategory(category, limit = 50, startDate = null, endDate = null) {
+        try {
+            let whereClause = `WHERE details->>'category' = $1`;
+            let params = [category, limit];
+            let paramIndex = 2;
+
+            if (startDate && endDate) {
+                whereClause += ` AND "timestamp" BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+                params.splice(-1, 0, startDate, endDate);
+                paramIndex += 2;
+            } else if (startDate) {
+                whereClause += ` AND "timestamp" >= $${paramIndex}`;
+                params.splice(-1, 0, startDate);
+                paramIndex += 1;
+            }
+
+            const result = await db.query(`
+                SELECT
+                    "log_id",
+                    "timestamp",
+                    "submission_id",
+                    "user_id",
+                    "action_type",
+                    "details"
+                FROM "AuditTrail"
+                ${whereClause}
+                ORDER BY "timestamp" DESC
+                LIMIT $${paramIndex}
+            `, params);
+
+            return result.rows;
+        } catch (error) {
+            console.error('[Audit] Failed to get audit trail by category:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get compliance audit report (Phase 3)
+     */
+    static async getComplianceReport(startDate, endDate) {
+        try {
+            const result = await db.query(`
+                SELECT
+                    DATE_TRUNC('day', "timestamp") as date,
+                    "action_type",
+                    COUNT(*) as count,
+                    COUNT(DISTINCT "user_id") as unique_users,
+                    details->>'category' as category
+                FROM "AuditTrail"
+                WHERE "timestamp" BETWEEN $1 AND $2
+                AND details->>'category' IN ('submission', 'validation', 'compliance')
+                GROUP BY DATE_TRUNC('day', "timestamp"), "action_type", details->>'category'
+                ORDER BY date DESC, count DESC
+            `, [startDate, endDate]);
+
+            return result.rows;
+        } catch (error) {
+            console.error('[Audit] Failed to get compliance report:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get manager activity report (Phase 3)
+     */
+    static async getManagerActivityReport(managerId = null, startDate = null, endDate = null) {
+        try {
+            let whereClause = `WHERE details->>'category' IN ('manager_action', 'team_management', 'manual_assignment')`;
+            let params = [];
+            let paramIndex = 1;
+
+            if (managerId) {
+                whereClause += ` AND "user_id" = $${paramIndex}`;
+                params.push(managerId);
+                paramIndex++;
+            }
+
+            if (startDate && endDate) {
+                whereClause += ` AND "timestamp" BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+                params.push(startDate, endDate);
+                paramIndex += 2;
+            } else if (startDate) {
+                whereClause += ` AND "timestamp" >= $${paramIndex}`;
+                params.push(startDate);
+                paramIndex++;
+            }
+
+            const result = await db.query(`
+                SELECT
+                    "log_id",
+                    "timestamp",
+                    "user_id",
+                    "action_type",
+                    "details",
+                    details->>'category' as category
+                FROM "AuditTrail"
+                ${whereClause}
+                ORDER BY "timestamp" DESC
+                LIMIT 100
+            `, params);
+
+            return result.rows;
+        } catch (error) {
+            console.error('[Audit] Failed to get manager activity report:', error);
             return [];
         }
     }

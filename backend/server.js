@@ -895,6 +895,1299 @@ app.patch('/api/assignments/:assignmentId/status', apiLimiter, authenticateApi, 
     }
 }));
 
+// Team Management API Endpoints for Phase 3
+
+// Get all teams (for managers and admins)
+app.get('/api/teams', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    try {
+        const teams = await db.query(`
+            SELECT
+                t."team_id",
+                t."team_name",
+                t."description",
+                t."manager_user_id",
+                t."parent_team_id",
+                t."is_active",
+                t."created_at",
+                COUNT(tm."user_id") as member_count
+            FROM "Teams" t
+            LEFT JOIN "TeamMembers" tm ON t."team_id" = tm."team_id" AND tm."is_active" = true
+            WHERE t."is_active" = true
+            GROUP BY t."team_id", t."team_name", t."description", t."manager_user_id", t."parent_team_id", t."is_active", t."created_at"
+            ORDER BY t."team_name"
+        `);
+
+        res.json({
+            success: true,
+            teams: teams.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching teams:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch teams'
+        });
+    }
+}));
+
+// Get team members for a specific team
+app.get('/api/teams/:teamId/members', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const teamId = req.params.teamId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    try {
+        const members = await db.query(`
+            SELECT
+                tm."team_member_id",
+                tm."user_id",
+                tm."role_in_team",
+                tm."joined_at",
+                tm."is_active"
+            FROM "TeamMembers" tm
+            WHERE tm."team_id" = $1 AND tm."is_active" = true
+            ORDER BY tm."role_in_team", tm."joined_at"
+        `, [teamId]);
+
+        res.json({
+            success: true,
+            members: members.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching team members:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch team members'
+        });
+    }
+}));
+
+// Get teams for current user (what teams they belong to)
+app.get('/api/user/teams', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        const userTeams = await db.query(`
+            SELECT
+                t."team_id",
+                t."team_name",
+                t."description",
+                tm."role_in_team",
+                tm."joined_at"
+            FROM "Teams" t
+            INNER JOIN "TeamMembers" tm ON t."team_id" = tm."team_id"
+            WHERE tm."user_id" = $1 AND tm."is_active" = true AND t."is_active" = true
+            ORDER BY t."team_name"
+        `, [userId]);
+
+        res.json({
+            success: true,
+            teams: userTeams.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching user teams:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch user teams'
+        });
+    }
+}));
+
+// Add user to team (for managers)
+app.post('/api/teams/:teamId/members', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const teamId = req.params.teamId;
+    const { userId, roleInTeam = 'member' } = req.body;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    if (!userId) {
+        return res.status(400).json({
+            success: false,
+            message: 'User ID is required'
+        });
+    }
+
+    try {
+        // Check if user is already a member
+        const existingMember = await db.query(`
+            SELECT "team_member_id" FROM "TeamMembers"
+            WHERE "team_id" = $1 AND "user_id" = $2
+        `, [teamId, userId]);
+
+        if (existingMember.rows.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: 'User is already a member of this team'
+            });
+        }
+
+        // Add user to team
+        const result = await db.query(`
+            INSERT INTO "TeamMembers" ("team_id", "user_id", "role_in_team")
+            VALUES ($1, $2, $3)
+            RETURNING "team_member_id"
+        `, [teamId, userId, roleInTeam]);
+
+        // Log the action using enhanced audit logger
+        await AuditLogger.logTeamManagement(req.user.userId, 'TEAM_MEMBER_ADDED', {
+            teamId,
+            addedUserId: userId,
+            roleInTeam,
+            addedBy: req.user.userId
+        });
+
+        res.json({
+            success: true,
+            message: 'User added to team successfully',
+            teamMemberId: result.rows[0].team_member_id
+        });
+    } catch (error) {
+        console.error('[API] Error adding user to team:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to add user to team'
+        });
+    }
+}));
+
+// Remove user from team (for managers)
+app.delete('/api/teams/:teamId/members/:userId', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const teamId = req.params.teamId;
+    const userId = req.params.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    try {
+        // Soft delete by setting is_active to false
+        const result = await db.query(`
+            UPDATE "TeamMembers"
+            SET "is_active" = false
+            WHERE "team_id" = $1 AND "user_id" = $2
+            RETURNING "team_member_id"
+        `, [teamId, userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Team member not found'
+            });
+        }
+
+        // Log the action using enhanced audit logger
+        await AuditLogger.logTeamManagement(req.user.userId, 'TEAM_MEMBER_REMOVED', {
+            teamId,
+            removedUserId: userId,
+            removedBy: req.user.userId
+        });
+
+        res.json({
+            success: true,
+            message: 'User removed from team successfully'
+        });
+    } catch (error) {
+        console.error('[API] Error removing user from team:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to remove user from team'
+        });
+    }
+}));
+
+// Manager Dashboard API Endpoints for Phase 3
+
+// Get manager dashboard statistics
+app.get('/api/manager/stats', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log dashboard access
+    await AuditLogger.logDashboardAccess(userId, 'manager', {
+        endpoint: '/api/manager/stats',
+        userRole
+    });
+
+    try {
+        // Get teams managed by this user
+        const managedTeams = await db.query(`
+            SELECT "team_id" FROM "Teams"
+            WHERE "manager_user_id" = $1 AND "is_active" = true
+        `, [userId]);
+
+        const teamIds = managedTeams.rows.map(row => row.team_id);
+
+        // If admin, get all teams
+        let teamFilter = '';
+        let queryParams = [];
+
+        if (userRole === 'admin') {
+            // Admin sees all data
+            teamFilter = '';
+        } else if (teamIds.length > 0) {
+            // Manager sees their teams' data
+            teamFilter = `AND ca."team_id" = ANY($1)`;
+            queryParams = [teamIds];
+        } else {
+            // No teams managed, return empty stats
+            return res.json({
+                success: true,
+                stats: {
+                    totalTeamMembers: 0,
+                    activeAssignments: 0,
+                    overdueAssignments: 0,
+                    completedThisMonth: 0,
+                    avgValidationTime: 0,
+                    teamCompletionRate: 0
+                }
+            });
+        }
+
+        // Get total team members
+        const teamMembersQuery = userRole === 'admin'
+            ? 'SELECT COUNT(DISTINCT "user_id") as count FROM "TeamMembers" WHERE "is_active" = true'
+            : `SELECT COUNT(DISTINCT tm."user_id") as count
+               FROM "TeamMembers" tm
+               WHERE tm."team_id" = ANY($1) AND tm."is_active" = true`;
+
+        const teamMembersParams = userRole === 'admin' ? [] : [teamIds];
+        const totalTeamMembers = await db.query(teamMembersQuery, teamMembersParams);
+
+        // Get active assignments for team members
+        const activeAssignmentsQuery = userRole === 'admin'
+            ? `SELECT COUNT(*) as count FROM "ChecklistAssignments"
+               WHERE "status" IN ('Assigned', 'InProgress')`
+            : `SELECT COUNT(*) as count FROM "ChecklistAssignments" ca
+               INNER JOIN "TeamMembers" tm ON ca."assigned_to_user_id" = tm."user_id"
+               WHERE ca."status" IN ('Assigned', 'InProgress')
+               AND tm."team_id" = ANY($1) AND tm."is_active" = true`;
+
+        const activeAssignments = await db.query(activeAssignmentsQuery,
+            userRole === 'admin' ? [] : [teamIds]);
+
+        // Get overdue assignments
+        const overdueAssignmentsQuery = userRole === 'admin'
+            ? `SELECT COUNT(*) as count FROM "ChecklistAssignments"
+               WHERE "status" IN ('Assigned', 'InProgress') AND "due_timestamp" < NOW()`
+            : `SELECT COUNT(*) as count FROM "ChecklistAssignments" ca
+               INNER JOIN "TeamMembers" tm ON ca."assigned_to_user_id" = tm."user_id"
+               WHERE ca."status" IN ('Assigned', 'InProgress')
+               AND ca."due_timestamp" < NOW()
+               AND tm."team_id" = ANY($1) AND tm."is_active" = true`;
+
+        const overdueAssignments = await db.query(overdueAssignmentsQuery,
+            userRole === 'admin' ? [] : [teamIds]);
+
+        // Get completed submissions this month for team
+        const completedThisMonthQuery = userRole === 'admin'
+            ? `SELECT COUNT(*) as count FROM "ChecklistSubmissions"
+               WHERE "submission_timestamp" >= DATE_TRUNC('month', NOW())
+               AND "status" = 'SupervisorValidated'`
+            : `SELECT COUNT(*) as count FROM "ChecklistSubmissions" cs
+               INNER JOIN "TeamMembers" tm ON cs."submitted_by_user_id" = tm."user_id"
+               WHERE cs."submission_timestamp" >= DATE_TRUNC('month', NOW())
+               AND cs."status" = 'SupervisorValidated'
+               AND tm."team_id" = ANY($1) AND tm."is_active" = true`;
+
+        const completedThisMonth = await db.query(completedThisMonthQuery,
+            userRole === 'admin' ? [] : [teamIds]);
+
+        // Get average validation turnaround time
+        const avgValidationQuery = userRole === 'admin'
+            ? `SELECT AVG(EXTRACT(EPOCH FROM (svl."validation_timestamp" - cs."submission_timestamp"))/3600) as avg_hours
+               FROM "SupervisorValidationsLog" svl
+               INNER JOIN "ChecklistSubmissions" cs ON svl."submission_id" = cs."submission_id"
+               WHERE svl."validation_timestamp" >= NOW() - INTERVAL '30 days'`
+            : `SELECT AVG(EXTRACT(EPOCH FROM (svl."validation_timestamp" - cs."submission_timestamp"))/3600) as avg_hours
+               FROM "SupervisorValidationsLog" svl
+               INNER JOIN "ChecklistSubmissions" cs ON svl."submission_id" = cs."submission_id"
+               INNER JOIN "TeamMembers" tm ON cs."submitted_by_user_id" = tm."user_id"
+               WHERE svl."validation_timestamp" >= NOW() - INTERVAL '30 days'
+               AND tm."team_id" = ANY($1) AND tm."is_active" = true`;
+
+        const avgValidation = await db.query(avgValidationQuery,
+            userRole === 'admin' ? [] : [teamIds]);
+
+        res.json({
+            success: true,
+            stats: {
+                totalTeamMembers: parseInt(totalTeamMembers.rows[0].count),
+                activeAssignments: parseInt(activeAssignments.rows[0].count),
+                overdueAssignments: parseInt(overdueAssignments.rows[0].count),
+                completedThisMonth: parseInt(completedThisMonth.rows[0].count),
+                avgValidationTime: parseFloat(avgValidation.rows[0].avg_hours) || 0,
+                teamCompletionRate: 0 // Will be calculated separately
+            }
+        });
+    } catch (error) {
+        console.error('[API] Error fetching manager stats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch manager statistics'
+        });
+    }
+}));
+
+// Get team assignments overview for manager
+app.get('/api/manager/team-assignments', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = parseInt(req.query.offset) || 0;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    try {
+        // Get teams managed by this user
+        const managedTeams = await db.query(`
+            SELECT "team_id", "team_name" FROM "Teams"
+            WHERE "manager_user_id" = $1 AND "is_active" = true
+        `, [userId]);
+
+        const teamIds = managedTeams.rows.map(row => row.team_id);
+
+        let assignmentsQuery;
+        let queryParams;
+
+        if (userRole === 'admin') {
+            // Admin sees all assignments
+            assignmentsQuery = `
+                SELECT
+                    ca."assignment_id",
+                    ca."assigned_to_user_id",
+                    ca."assignment_timestamp",
+                    ca."due_timestamp",
+                    ca."status",
+                    cs."checklist_title",
+                    cs."original_checklist_filename",
+                    cs."submission_id",
+                    t."team_name"
+                FROM "ChecklistAssignments" ca
+                INNER JOIN "ChecklistSubmissions" cs ON ca."submission_id" = cs."submission_id"
+                LEFT JOIN "Teams" t ON ca."team_id" = t."team_id"
+                ORDER BY ca."assignment_timestamp" DESC
+                LIMIT $1 OFFSET $2
+            `;
+            queryParams = [limit, offset];
+        } else if (teamIds.length > 0) {
+            // Manager sees their teams' assignments
+            assignmentsQuery = `
+                SELECT
+                    ca."assignment_id",
+                    ca."assigned_to_user_id",
+                    ca."assignment_timestamp",
+                    ca."due_timestamp",
+                    ca."status",
+                    cs."checklist_title",
+                    cs."original_checklist_filename",
+                    cs."submission_id",
+                    t."team_name"
+                FROM "ChecklistAssignments" ca
+                INNER JOIN "ChecklistSubmissions" cs ON ca."submission_id" = cs."submission_id"
+                INNER JOIN "TeamMembers" tm ON ca."assigned_to_user_id" = tm."user_id"
+                LEFT JOIN "Teams" t ON ca."team_id" = t."team_id"
+                WHERE tm."team_id" = ANY($1) AND tm."is_active" = true
+                ORDER BY ca."assignment_timestamp" DESC
+                LIMIT $2 OFFSET $3
+            `;
+            queryParams = [teamIds, limit, offset];
+        } else {
+            // No teams managed
+            return res.json({
+                success: true,
+                assignments: [],
+                total: 0,
+                limit,
+                offset
+            });
+        }
+
+        const assignments = await db.query(assignmentsQuery, queryParams);
+
+        res.json({
+            success: true,
+            assignments: assignments.rows,
+            total: assignments.rows.length,
+            limit,
+            offset,
+            managedTeams: managedTeams.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching team assignments:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch team assignments'
+        });
+    }
+}));
+
+// Get team performance analytics for manager
+app.get('/api/manager/team-performance', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const days = parseInt(req.query.days) || 30;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    try {
+        // Get teams managed by this user
+        const managedTeams = await db.query(`
+            SELECT "team_id", "team_name" FROM "Teams"
+            WHERE "manager_user_id" = $1 AND "is_active" = true
+        `, [userId]);
+
+        const teamIds = managedTeams.rows.map(row => row.team_id);
+
+        let performanceQuery;
+        let queryParams;
+
+        if (userRole === 'admin') {
+            // Admin sees all team performance
+            performanceQuery = `
+                SELECT
+                    t."team_name",
+                    COUNT(DISTINCT tm."user_id") as team_size,
+                    COUNT(cs."submission_id") as total_submissions,
+                    COUNT(CASE WHEN cs."status" = 'SupervisorValidated' THEN 1 END) as completed_submissions,
+                    COUNT(CASE WHEN ca."due_timestamp" < NOW() AND ca."status" IN ('Assigned', 'InProgress') THEN 1 END) as overdue_assignments,
+                    AVG(EXTRACT(EPOCH FROM (svl."validation_timestamp" - cs."submission_timestamp"))/3600) as avg_validation_hours
+                FROM "Teams" t
+                LEFT JOIN "TeamMembers" tm ON t."team_id" = tm."team_id" AND tm."is_active" = true
+                LEFT JOIN "ChecklistSubmissions" cs ON tm."user_id" = cs."submitted_by_user_id"
+                    AND cs."submission_timestamp" >= NOW() - INTERVAL '$1 days'
+                LEFT JOIN "ChecklistAssignments" ca ON tm."user_id" = ca."assigned_to_user_id"
+                LEFT JOIN "SupervisorValidationsLog" svl ON cs."submission_id" = svl."submission_id"
+                WHERE t."is_active" = true
+                GROUP BY t."team_id", t."team_name"
+                ORDER BY t."team_name"
+            `;
+            queryParams = [days];
+        } else if (teamIds.length > 0) {
+            // Manager sees their teams' performance
+            performanceQuery = `
+                SELECT
+                    t."team_name",
+                    COUNT(DISTINCT tm."user_id") as team_size,
+                    COUNT(cs."submission_id") as total_submissions,
+                    COUNT(CASE WHEN cs."status" = 'SupervisorValidated' THEN 1 END) as completed_submissions,
+                    COUNT(CASE WHEN ca."due_timestamp" < NOW() AND ca."status" IN ('Assigned', 'InProgress') THEN 1 END) as overdue_assignments,
+                    AVG(EXTRACT(EPOCH FROM (svl."validation_timestamp" - cs."submission_timestamp"))/3600) as avg_validation_hours
+                FROM "Teams" t
+                LEFT JOIN "TeamMembers" tm ON t."team_id" = tm."team_id" AND tm."is_active" = true
+                LEFT JOIN "ChecklistSubmissions" cs ON tm."user_id" = cs."submitted_by_user_id"
+                    AND cs."submission_timestamp" >= NOW() - INTERVAL '$1 days'
+                LEFT JOIN "ChecklistAssignments" ca ON tm."user_id" = ca."assigned_to_user_id"
+                LEFT JOIN "SupervisorValidationsLog" svl ON cs."submission_id" = svl."submission_id"
+                WHERE t."team_id" = ANY($2) AND t."is_active" = true
+                GROUP BY t."team_id", t."team_name"
+                ORDER BY t."team_name"
+            `;
+            queryParams = [days, teamIds];
+        } else {
+            // No teams managed
+            return res.json({
+                success: true,
+                performance: [],
+                period: `${days} days`
+            });
+        }
+
+        const performance = await db.query(performanceQuery, queryParams);
+
+        // Calculate completion rates
+        const performanceWithRates = performance.rows.map(team => ({
+            ...team,
+            completion_rate: team.total_submissions > 0
+                ? (team.completed_submissions / team.total_submissions * 100).toFixed(1)
+                : 0,
+            avg_validation_hours: parseFloat(team.avg_validation_hours) || 0
+        }));
+
+        res.json({
+            success: true,
+            performance: performanceWithRates,
+            period: `${days} days`,
+            managedTeams: managedTeams.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching team performance:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch team performance'
+        });
+    }
+}));
+
+// Get audit trail for managers (Phase 3)
+app.get('/api/manager/audit-trail', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const category = req.query.category || 'all';
+    const limit = parseInt(req.query.limit) || 50;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log audit access
+    await AuditLogger.logAnalyticsAccess(userId, 'audit_trail', {
+        category,
+        limit,
+        startDate,
+        endDate
+    });
+
+    try {
+        let auditData;
+
+        if (category === 'all') {
+            if (userRole === 'admin') {
+                auditData = await AuditLogger.getRecentAuditEvents(limit);
+            } else {
+                // Managers see their team-related audit events
+                auditData = await AuditLogger.getManagerActivityReport(userId, startDate, endDate);
+            }
+        } else {
+            auditData = await AuditLogger.getAuditByCategory(category, limit, startDate, endDate);
+        }
+
+        res.json({
+            success: true,
+            auditTrail: auditData,
+            category,
+            limit
+        });
+    } catch (error) {
+        console.error('[API] Error fetching audit trail:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch audit trail'
+        });
+    }
+}));
+
+// Get compliance report for managers (Phase 3)
+app.get('/api/manager/compliance-report', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const startDate = req.query.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const endDate = req.query.endDate || new Date().toISOString();
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log compliance report access
+    await AuditLogger.logAnalyticsAccess(userId, 'compliance_report', {
+        startDate,
+        endDate
+    });
+
+    try {
+        const complianceData = await AuditLogger.getComplianceReport(startDate, endDate);
+
+        res.json({
+            success: true,
+            complianceReport: complianceData,
+            period: {
+                startDate,
+                endDate
+            }
+        });
+    } catch (error) {
+        console.error('[API] Error fetching compliance report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch compliance report'
+        });
+    }
+}));
+
+// BI and Analytics API Endpoints for Phase 3
+
+// Get submission summary analytics
+app.get('/api/analytics/submissions', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const limit = parseInt(req.query.limit) || 100;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log analytics access
+    await AuditLogger.logAnalyticsAccess(userId, 'submission_analytics', {
+        limit,
+        startDate,
+        endDate
+    });
+
+    try {
+        let whereClause = '';
+        let params = [limit];
+        let paramIndex = 2;
+
+        if (startDate && endDate) {
+            whereClause = 'WHERE "submission_timestamp" BETWEEN $2 AND $3';
+            params = [limit, startDate, endDate];
+            paramIndex = 4;
+        } else if (startDate) {
+            whereClause = 'WHERE "submission_timestamp" >= $2';
+            params = [limit, startDate];
+            paramIndex = 3;
+        }
+
+        const submissions = await db.query(`
+            SELECT * FROM "v_submission_summary"
+            ${whereClause}
+            ORDER BY "submission_timestamp" DESC
+            LIMIT $1
+        `, params);
+
+        res.json({
+            success: true,
+            submissions: submissions.rows,
+            total: submissions.rows.length,
+            limit
+        });
+    } catch (error) {
+        console.error('[API] Error fetching submission analytics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch submission analytics'
+        });
+    }
+}));
+
+// Get team performance analytics
+app.get('/api/analytics/team-performance', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log analytics access
+    await AuditLogger.logAnalyticsAccess(userId, 'team_performance', {});
+
+    try {
+        let query = 'SELECT * FROM "v_team_performance" ORDER BY "team_name"';
+        let params = [];
+
+        // If manager (not admin), filter to their teams
+        if (userRole === 'manager') {
+            query = 'SELECT * FROM "v_team_performance" WHERE "manager_user_id" = $1 ORDER BY "team_name"';
+            params = [userId];
+        }
+
+        const teamPerformance = await db.query(query, params);
+
+        res.json({
+            success: true,
+            teamPerformance: teamPerformance.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching team performance analytics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch team performance analytics'
+        });
+    }
+}));
+
+// Get compliance metrics
+app.get('/api/analytics/compliance', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const days = parseInt(req.query.days) || 30;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log analytics access
+    await AuditLogger.logAnalyticsAccess(userId, 'compliance_metrics', { days });
+
+    try {
+        const compliance = await db.query(`
+            SELECT * FROM "v_compliance_metrics"
+            WHERE "submission_date" >= NOW() - INTERVAL '${days} days'
+            ORDER BY "submission_date" DESC, "original_checklist_filename"
+        `);
+
+        res.json({
+            success: true,
+            complianceMetrics: compliance.rows,
+            period: `${days} days`
+        });
+    } catch (error) {
+        console.error('[API] Error fetching compliance metrics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch compliance metrics'
+        });
+    }
+}));
+
+// Get assignment analytics
+app.get('/api/analytics/assignments', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const status = req.query.status; // optional filter
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log analytics access
+    await AuditLogger.logAnalyticsAccess(userId, 'assignment_analytics', { status });
+
+    try {
+        let whereClause = '';
+        let params = [];
+
+        if (status) {
+            whereClause = 'WHERE "status" = $1';
+            params = [status];
+        }
+
+        const assignments = await db.query(`
+            SELECT * FROM "v_assignment_analytics"
+            ${whereClause}
+            ORDER BY "assignment_timestamp" DESC
+            LIMIT 200
+        `, params);
+
+        res.json({
+            success: true,
+            assignments: assignments.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching assignment analytics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch assignment analytics'
+        });
+    }
+}));
+
+// Manual Assignment API Endpoints for Phase 3
+
+// Get available checklists for manual assignment
+app.get('/api/manager/available-checklists', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    try {
+        // Get distinct checklist types from existing submissions
+        const checklists = await db.query(`
+            SELECT DISTINCT
+                "original_checklist_filename",
+                "checklist_title",
+                COUNT(*) as usage_count,
+                MAX("submission_timestamp") as last_used
+            FROM "ChecklistSubmissions"
+            WHERE "original_checklist_filename" IS NOT NULL
+            GROUP BY "original_checklist_filename", "checklist_title"
+            ORDER BY usage_count DESC, last_used DESC
+        `);
+
+        res.json({
+            success: true,
+            checklists: checklists.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching available checklists:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch available checklists'
+        });
+    }
+}));
+
+// Create manual assignment
+app.post('/api/manager/manual-assignment', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const managerId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const {
+        assignedUserId,
+        checklistFilename,
+        checklistTitle,
+        dueDate,
+        notes,
+        teamId
+    } = req.body;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Validate required fields
+    if (!assignedUserId || !checklistFilename || !checklistTitle) {
+        return res.status(400).json({
+            success: false,
+            message: 'Assigned user, checklist filename, and title are required'
+        });
+    }
+
+    const client = await db.getClient();
+    try {
+        await client.query('BEGIN');
+
+        // Create a new "shell" submission for the manual assignment
+        const submissionResult = await client.query(`
+            INSERT INTO "ChecklistSubmissions" (
+                "original_checklist_filename",
+                "checklist_title",
+                "submitted_by_user_id",
+                "submission_timestamp",
+                "status",
+                "due_date",
+                "assigned_to_user_id"
+            ) VALUES ($1, $2, $3, NOW(), 'Assigned', $4, $5)
+            RETURNING "submission_id"
+        `, [
+            checklistFilename,
+            checklistTitle,
+            null, // No original submitter for manual assignments
+            dueDate || null,
+            assignedUserId
+        ]);
+
+        const submissionId = submissionResult.rows[0].submission_id;
+
+        // Create assignment record
+        const assignmentResult = await client.query(`
+            INSERT INTO "ChecklistAssignments" (
+                "submission_id",
+                "assigned_to_user_id",
+                "assignment_timestamp",
+                "due_timestamp",
+                "status",
+                "assigned_by_user_id",
+                "team_id",
+                "assignment_notes"
+            ) VALUES ($1, $2, NOW(), $3, 'Assigned', $4, $5, $6)
+            RETURNING "assignment_id"
+        `, [
+            submissionId,
+            assignedUserId,
+            dueDate || null,
+            managerId,
+            teamId || null,
+            notes || null
+        ]);
+
+        const assignmentId = assignmentResult.rows[0].assignment_id;
+
+        // TODO: Parse checklist structure and create SubmissionHeadings/SubmissionTasks
+        // For now, we'll create a placeholder structure
+
+        // Log the manual assignment
+        await AuditLogger.logManualAssignment(managerId, assignedUserId, submissionId, {
+            checklistFilename,
+            checklistTitle,
+            dueDate,
+            notes,
+            teamId,
+            assignmentId
+        });
+
+        await client.query('COMMIT');
+
+        res.json({
+            success: true,
+            message: 'Manual assignment created successfully',
+            assignmentId,
+            submissionId
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('[API] Error creating manual assignment:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create manual assignment'
+        });
+    } finally {
+        client.release();
+    }
+}));
+
+// Get manual assignments created by manager
+app.get('/api/manager/manual-assignments', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const managerId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const limit = parseInt(req.query.limit) || 50;
+    const status = req.query.status;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    try {
+        let whereClause = 'WHERE ca."assigned_by_user_id" = $1';
+        let params = [managerId, limit];
+        let paramIndex = 3;
+
+        if (userRole === 'admin') {
+            // Admin can see all manual assignments
+            whereClause = 'WHERE ca."assigned_by_user_id" IS NOT NULL';
+            params = [limit];
+            paramIndex = 2;
+        }
+
+        if (status) {
+            whereClause += ` AND ca."status" = $${paramIndex}`;
+            params.splice(-1, 0, status);
+            paramIndex++;
+        }
+
+        const assignments = await db.query(`
+            SELECT
+                ca."assignment_id",
+                ca."assigned_to_user_id",
+                ca."assignment_timestamp",
+                ca."due_timestamp",
+                ca."status",
+                ca."assignment_notes",
+                cs."checklist_title",
+                cs."original_checklist_filename",
+                cs."submission_id",
+                t."team_name"
+            FROM "ChecklistAssignments" ca
+            INNER JOIN "ChecklistSubmissions" cs ON ca."submission_id" = cs."submission_id"
+            LEFT JOIN "Teams" t ON ca."team_id" = t."team_id"
+            ${whereClause}
+            ORDER BY ca."assignment_timestamp" DESC
+            LIMIT $${params.length}
+        `, params);
+
+        res.json({
+            success: true,
+            assignments: assignments.rows,
+            total: assignments.rows.length
+        });
+    } catch (error) {
+        console.error('[API] Error fetching manual assignments:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch manual assignments'
+        });
+    }
+}));
+
+// Update manual assignment status
+app.patch('/api/manager/manual-assignment/:assignmentId', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const managerId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const assignmentId = req.params.assignmentId;
+    const { status, notes } = req.body;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    const validStatuses = ['Assigned', 'InProgress', 'Cancelled', 'Completed'];
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid status'
+        });
+    }
+
+    try {
+        // Update assignment
+        const result = await db.query(`
+            UPDATE "ChecklistAssignments"
+            SET "status" = $1, "assignment_notes" = COALESCE($2, "assignment_notes")
+            WHERE "assignment_id" = $3
+            AND ("assigned_by_user_id" = $4 OR $5 = 'admin')
+            RETURNING "assignment_id", "assigned_to_user_id", "submission_id"
+        `, [status, notes, assignmentId, managerId, userRole]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Assignment not found or access denied'
+            });
+        }
+
+        const assignment = result.rows[0];
+
+        // Log the status change
+        await AuditLogger.logManagerAction(managerId, 'MANUAL_ASSIGNMENT_UPDATED', {
+            assignmentId,
+            newStatus: status,
+            notes,
+            assignedUserId: assignment.assigned_to_user_id,
+            submissionId: assignment.submission_id
+        });
+
+        res.json({
+            success: true,
+            message: 'Assignment updated successfully'
+        });
+    } catch (error) {
+        console.error('[API] Error updating manual assignment:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update assignment'
+        });
+    }
+}));
+
+// Get team completion trends for analytics
+app.get('/api/analytics/completion-trends', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const days = parseInt(req.query.days) || 30;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log analytics access
+    await AuditLogger.logAnalyticsAccess(userId, 'completion_trends', { days });
+
+    try {
+        // Get daily completion trends
+        const trends = await db.query(`
+            SELECT
+                DATE_TRUNC('day', cs."submission_timestamp") as date,
+                COUNT(cs."submission_id") as total_submissions,
+                COUNT(CASE WHEN cs."status" = 'SupervisorValidated' THEN 1 END) as completed_submissions,
+                COUNT(DISTINCT cs."submitted_by_user_id") as unique_users,
+                AVG(
+                    CASE
+                        WHEN total_tasks.task_count > 0
+                        THEN (completed_tasks.completed_count::decimal / total_tasks.task_count) * 100
+                    END
+                ) as avg_completion_percentage
+            FROM "ChecklistSubmissions" cs
+            LEFT JOIN (
+                SELECT
+                    cs2."submission_id",
+                    COUNT(st."task_id") as task_count
+                FROM "ChecklistSubmissions" cs2
+                JOIN "SubmissionHeadings" sh ON cs2."submission_id" = sh."submission_id"
+                JOIN "SubmissionTasks" st ON sh."heading_id" = st."heading_id"
+                GROUP BY cs2."submission_id"
+            ) total_tasks ON cs."submission_id" = total_tasks."submission_id"
+            LEFT JOIN (
+                SELECT
+                    cs2."submission_id",
+                    COUNT(CASE WHEN st."is_checked_on_submission" = true THEN 1 END) as completed_count
+                FROM "ChecklistSubmissions" cs2
+                JOIN "SubmissionHeadings" sh ON cs2."submission_id" = sh."submission_id"
+                JOIN "SubmissionTasks" st ON sh."heading_id" = st."heading_id"
+                GROUP BY cs2."submission_id"
+            ) completed_tasks ON cs."submission_id" = completed_tasks."submission_id"
+            WHERE cs."submission_timestamp" >= NOW() - INTERVAL '${days} days'
+            GROUP BY DATE_TRUNC('day', cs."submission_timestamp")
+            ORDER BY date DESC
+        `);
+
+        res.json({
+            success: true,
+            trends: trends.rows,
+            period: `${days} days`
+        });
+    } catch (error) {
+        console.error('[API] Error fetching completion trends:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch completion trends'
+        });
+    }
+}));
+
+// Get validation turnaround analytics
+app.get('/api/analytics/validation-turnaround', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const days = parseInt(req.query.days) || 30;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log analytics access
+    await AuditLogger.logAnalyticsAccess(userId, 'validation_turnaround', { days });
+
+    try {
+        const turnaroundData = await db.query(`
+            SELECT * FROM "v_validation_metrics"
+            WHERE "validation_month" >= DATE_TRUNC('month', NOW() - INTERVAL '${days} days')
+            ORDER BY "validation_month" DESC, "total_validations" DESC
+        `);
+
+        res.json({
+            success: true,
+            validationMetrics: turnaroundData.rows,
+            period: `${days} days`
+        });
+    } catch (error) {
+        console.error('[API] Error fetching validation turnaround:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch validation turnaround data'
+        });
+    }
+}));
+
+// Get team productivity metrics
+app.get('/api/analytics/team-productivity', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const teamId = req.query.teamId;
+    const days = parseInt(req.query.days) || 30;
+
+    if (!['manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Manager privileges required'
+        });
+    }
+
+    // Log analytics access
+    await AuditLogger.logAnalyticsAccess(userId, 'team_productivity', { teamId, days });
+
+    try {
+        let whereClause = '';
+        let params = [days];
+
+        if (teamId) {
+            whereClause = 'AND tm."team_id" = $2';
+            params.push(teamId);
+        }
+
+        const productivity = await db.query(`
+            SELECT
+                tm."user_id",
+                COUNT(DISTINCT cs."submission_id") as total_submissions,
+                COUNT(DISTINCT CASE
+                    WHEN cs."status" = 'SupervisorValidated'
+                    THEN cs."submission_id"
+                END) as validated_submissions,
+                COUNT(DISTINCT ca."assignment_id") as total_assignments,
+                COUNT(DISTINCT CASE
+                    WHEN ca."status" = 'Completed'
+                    THEN ca."assignment_id"
+                END) as completed_assignments,
+                AVG(EXTRACT(EPOCH FROM (svl."validation_timestamp" - cs."submission_timestamp"))/3600) as avg_turnaround_hours
+            FROM "TeamMembers" tm
+            LEFT JOIN "ChecklistSubmissions" cs ON tm."user_id" = cs."submitted_by_user_id"
+                AND cs."submission_timestamp" >= NOW() - INTERVAL '$1 days'
+            LEFT JOIN "ChecklistAssignments" ca ON tm."user_id" = ca."assigned_to_user_id"
+            LEFT JOIN "SupervisorValidationsLog" svl ON cs."submission_id" = svl."submission_id"
+            WHERE tm."is_active" = true ${whereClause}
+            GROUP BY tm."user_id"
+            ORDER BY total_submissions DESC
+        `, params);
+
+        res.json({
+            success: true,
+            productivity: productivity.rows,
+            period: `${days} days`,
+            teamId: teamId || 'all'
+        });
+    } catch (error) {
+        console.error('[API] Error fetching team productivity:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch team productivity data'
+        });
+    }
+}));
+
 // Get user dashboard statistics
 app.get('/api/user/stats', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
     const userId = req.user.userId;
