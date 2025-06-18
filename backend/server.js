@@ -13,6 +13,8 @@ const fs = require('fs');  // Import the file system module
 const http = require('http');
 const db = require('./config/db'); // Import PostgreSQL configuration
 const automationEngine = require('./automation/automationEngine'); // Import automation engine
+const scheduledAutomation = require('./automation/scheduledAutomation'); // Import scheduled automation
+const rpaIntegration = require('./automation/rpaIntegration'); // Import RPA integration
 const AuditLogger = require('./utils/auditLogger'); // Import audit logger
 
 const nodemailer = require('nodemailer');  // Import nodemailer for sending emails
@@ -2551,6 +2553,138 @@ app.get('/api/compliance/non-compliance', apiLimiter, authenticateApi, asyncHand
     }
 }));
 
+// Scheduled Automation API Endpoints for Phase 4
+
+// Get scheduled automation status
+app.get('/api/admin/scheduled-automation/status', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Admin privileges required'
+        });
+    }
+
+    try {
+        const jobStatus = scheduledAutomation.getJobStatus();
+
+        // Get scheduled automation rules from database
+        const scheduledRules = await db.query(`
+            SELECT
+                "rule_id",
+                "source_checklist_filename_pattern",
+                "next_checklist_filename",
+                "assignment_logic_type",
+                "assignment_logic_detail",
+                "is_active"
+            FROM "AutomationRules"
+            WHERE "trigger_event" = 'SCHEDULED'
+            ORDER BY "rule_id"
+        `);
+
+        res.json({
+            success: true,
+            scheduledJobs: jobStatus,
+            scheduledRules: scheduledRules.rows,
+            isInitialized: scheduledAutomation.isInitialized
+        });
+    } catch (error) {
+        console.error('[API] Error fetching scheduled automation status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch scheduled automation status'
+        });
+    }
+}));
+
+// RPA Integration API Endpoints for Phase 4
+
+// Get RPA integration status
+app.get('/api/admin/rpa/status', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['admin', 'compliance'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Admin or compliance privileges required'
+        });
+    }
+
+    try {
+        const rpaStatus = rpaIntegration.getStatus();
+
+        // Get RPA execution statistics
+        const executionStats = await db.query(`
+            SELECT
+                "workflow_type",
+                COUNT(*) as total_executions,
+                COUNT(CASE WHEN "execution_status" = 'SUCCESS' THEN 1 END) as successful_executions,
+                COUNT(CASE WHEN "execution_timestamp" >= NOW() - INTERVAL '24 hours' THEN 1 END) as executions_last_24h,
+                MAX("execution_timestamp") as last_execution
+            FROM "RPAExecutionLog"
+            WHERE "execution_timestamp" >= NOW() - INTERVAL '30 days'
+            GROUP BY "workflow_type"
+            ORDER BY total_executions DESC
+        `);
+
+        res.json({
+            success: true,
+            rpaStatus: rpaStatus,
+            executionStats: executionStats.rows
+        });
+    } catch (error) {
+        console.error('[API] Error fetching RPA status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch RPA status'
+        });
+    }
+}));
+
+// Manually trigger RPA workflow (for testing)
+app.post('/api/admin/rpa/trigger', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const { eventType, eventData } = req.body;
+
+    if (!['admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Admin privileges required'
+        });
+    }
+
+    if (!eventType) {
+        return res.status(400).json({
+            success: false,
+            message: 'Event type is required'
+        });
+    }
+
+    try {
+        await rpaIntegration.triggerWorkflow(eventType, {
+            ...eventData,
+            triggeredBy: userId,
+            manualTrigger: true,
+            timestamp: new Date().toISOString()
+        });
+
+        res.json({
+            success: true,
+            message: `RPA workflow triggered for event: ${eventType}`
+        });
+    } catch (error) {
+        console.error('[API] Error triggering RPA workflow:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to trigger RPA workflow'
+        });
+    }
+}));
+
 // Health check routes
 app.use('/', require('./routes/health'));
 
@@ -2586,6 +2720,22 @@ if (sslConfig.enableSSL) {
                 sslCertPath: sslConfig.sslCertPath,
                 timestamp: new Date().toISOString()
             });
+
+            // Initialize scheduled automation
+            try {
+                await scheduledAutomation.initialize();
+                console.log('[Scheduled Automation] Initialized successfully');
+            } catch (error) {
+                console.error('[Scheduled Automation] Failed to initialize:', error);
+            }
+
+            // Initialize RPA integration
+            try {
+                await rpaIntegration.initialize();
+                console.log('[RPA Integration] Initialized successfully');
+            } catch (error) {
+                console.error('[RPA Integration] Failed to initialize:', error);
+            }
         });
 
         // Optionally start HTTP server for redirects
@@ -2614,6 +2764,22 @@ if (sslConfig.enableSSL) {
                 reason: 'SSL certificate error',
                 timestamp: new Date().toISOString()
             });
+
+            // Initialize scheduled automation
+            try {
+                await scheduledAutomation.initialize();
+                console.log('[Scheduled Automation] Initialized successfully');
+            } catch (error) {
+                console.error('[Scheduled Automation] Failed to initialize:', error);
+            }
+
+            // Initialize RPA integration
+            try {
+                await rpaIntegration.initialize();
+                console.log('[RPA Integration] Initialized successfully');
+            } catch (error) {
+                console.error('[RPA Integration] Failed to initialize:', error);
+            }
         });
 
         server.on('error', handleServerError);
@@ -2631,6 +2797,22 @@ if (sslConfig.enableSSL) {
             reason: 'SSL disabled in configuration',
             timestamp: new Date().toISOString()
         });
+
+        // Initialize scheduled automation
+        try {
+            await scheduledAutomation.initialize();
+            console.log('[Scheduled Automation] Initialized successfully');
+        } catch (error) {
+            console.error('[Scheduled Automation] Failed to initialize:', error);
+        }
+
+        // Initialize RPA integration
+        try {
+            await rpaIntegration.initialize();
+            console.log('[RPA Integration] Initialized successfully');
+        } catch (error) {
+            console.error('[RPA Integration] Failed to initialize:', error);
+        }
     });
 
     server.on('error', handleServerError);
@@ -2666,6 +2848,10 @@ async function gracefulShutdown(signal) {
     console.log(`[SHUTDOWN] Received ${signal}, shutting down gracefully...`);
 
     try {
+        // Stop scheduled automation
+        scheduledAutomation.stopAllJobs();
+        console.log('[SHUTDOWN] Scheduled automation stopped');
+
         await AuditLogger.logSystem('SERVER_SHUTDOWN', {
             signal: signal,
             timestamp: new Date().toISOString()

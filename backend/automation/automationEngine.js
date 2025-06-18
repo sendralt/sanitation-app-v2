@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const cheerio = require('cheerio'); // For parsing HTML checklist files
 const AuditLogger = require('../utils/auditLogger');
+const rpaIntegration = require('./rpaIntegration');
 
 // For Node.js versions that don't have built-in fetch
 let fetch;
@@ -262,6 +263,23 @@ class AutomationEngine {
             ]);
 
             await client.query('COMMIT');
+
+            // Trigger RPA workflow for assignment creation
+            try {
+                await rpaIntegration.triggerWorkflow('ASSIGNMENT_CREATED', {
+                    submissionId: newSubmissionId,
+                    assigneeUserId: assigneeUserId,
+                    checklistFilename: checklistFilename,
+                    checklistTitle: this.deriveChecklistTitle(checklistFilename),
+                    dueDate: dueDate.toISOString(),
+                    ruleId: rule.rule_id,
+                    assignmentLogicType: rule.assignment_logic_type
+                });
+            } catch (rpaError) {
+                console.error('[Automation] Error triggering RPA workflow for assignment creation:', rpaError);
+                // Don't fail the assignment creation if RPA fails
+            }
+
             return newSubmissionId;
 
         } catch (error) {
