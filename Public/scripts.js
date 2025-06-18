@@ -2,6 +2,35 @@
 let authToken = null;
 let currentUser = null;
 
+// Function to decode JWT token
+function decodeJWT(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error('Error decoding JWT:', e);
+        return null;
+    }
+}
+
+// Check if token is expired
+function isTokenExpired(token) {
+    const decoded = decodeJWT(token);
+    if (!decoded || !decoded.exp) {
+        return true; // Consider invalid tokens as expired
+    }
+
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    const bufferTime = 60; // 60 seconds buffer before actual expiration
+
+    return decoded.exp <= (currentTime + bufferTime);
+}
+
 // Function to fetch JWT from the server (dhl_login)
 async function fetchAuthToken() {
     // This function should only be called if not on the main landing page
@@ -333,9 +362,9 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Function to redirect to the menu page
+    // Function to redirect to the user dashboard
     function goToMenu() {
-        window.location.href = "index.html"; 
+        window.location.href = "/dashboard";
     }
 
     // Save Data to Backend
@@ -367,10 +396,15 @@ document.addEventListener("DOMContentLoaded", function() {
             supervisorEmail: supervisorEmail,
         };
 
-        if (!authToken) {
-            alert('Authentication token is not available. Please ensure you are properly logged in.');
-            console.error('Auth token not available for saveData.');
-            return Promise.reject(new Error('Auth token not available.')); // Prevent submission
+        // Check if token exists and is not expired
+        if (!authToken || isTokenExpired(authToken)) {
+            console.log('[saveData] Token missing or expired, attempting to get fresh token...');
+            const tokenRefreshed = await fetchAuthToken();
+            if (!tokenRefreshed || !authToken) {
+                alert('Authentication token is not available. Please ensure you are properly logged in.');
+                console.error('Auth token not available for saveData.');
+                return Promise.reject(new Error('Auth token not available.')); // Prevent submission
+            }
         }
 
         // Wait for configuration to be loaded and get backend API URL

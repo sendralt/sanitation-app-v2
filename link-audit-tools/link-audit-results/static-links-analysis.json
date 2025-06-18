@@ -1,0 +1,2031 @@
+{
+  "timestamp": "2025-06-18T14:31:23.851Z",
+  "summary": {
+    "ejsTemplates": 22,
+    "routeFiles": 9,
+    "jsFiles": 2,
+    "staticChecklists": 30,
+    "totalLinks": 127,
+    "totalRoutes": 110
+  },
+  "ejsTemplates": [
+    {
+      "file": "dhl_login\\views\\admin\\automation-rule-form.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\automation-rule-form.ejs",
+      "links": [
+        {
+          "url": "/admin",
+          "type": "href",
+          "context": "                <ol class=\"breadcrumb\">\r\n                    <li class=\"breadcrumb-item\"><a href=\"/admin\">Admin Dashboard</a></li>\r\n                    <li class=\"breadcrumb-item\"><a href=\"/admin/automation-rules\">Automation Rules</a></li>\r",
+          "line": 9
+        },
+        {
+          "url": "/admin/automation-rules",
+          "type": "href",
+          "context": "                    <li class=\"breadcrumb-item\"><a href=\"/admin\">Admin Dashboard</a></li>\r\n                    <li class=\"breadcrumb-item\"><a href=\"/admin/automation-rules\">Automation Rules</a></li>\r\n                    <li class=\"breadcrumb-item active\"><%= isEdit ? 'Edit Rule' : 'Create Rule' %></li>\r",
+          "line": 10
+        },
+        {
+          "url": "/admin/automation-rules",
+          "type": "href",
+          "context": "                        <div class=\"d-flex justify-content-between\">\r\n                            <a href=\"/admin/automation-rules\" class=\"btn btn-secondary\">\r\n                                <i class=\"fas fa-arrow-left\"></i> Cancel\r",
+          "line": 192
+        },
+        {
+          "url": "<%= isEdit ? `/admin/automation-rules/${rule.rule_id}` : ",
+          "type": "href",
+          "context": "\r\n                    <form method=\"POST\" action=\"<%= isEdit ? `/admin/automation-rules/${rule.rule_id}` : '/admin/automation-rules' %>\">\r\n                        <input type=\"hidden\" name=\"_csrf\" value=\"<%= _csrf %>\">\r",
+          "line": 32
+        }
+      ],
+      "linkCount": 4
+    },
+    {
+      "file": "dhl_login\\views\\admin\\automation-rules.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\automation-rules.ejs",
+      "links": [
+        {
+          "url": "/admin/automation-rules/new",
+          "type": "href",
+          "context": "                <h2>Automation Rules Management</h2>\r\n                <a href=\"/admin/automation-rules/new\" class=\"btn btn-primary\">\r\n                    <i class=\"fas fa-plus\"></i> Create New Rule\r",
+          "line": 8
+        },
+        {
+          "url": "/admin",
+          "type": "href",
+          "context": "                <ol class=\"breadcrumb\">\r\n                    <li class=\"breadcrumb-item\"><a href=\"/admin\">Admin Dashboard</a></li>\r\n                    <li class=\"breadcrumb-item active\">Automation Rules</li>\r",
+          "line": 30
+        },
+        {
+          "url": "/admin/automation-rules/<%= rule.rule_id %>/edit",
+          "type": "href",
+          "context": "                                                <div class=\"btn-group btn-group-sm\" role=\"group\">\r\n                                                    <a href=\"/admin/automation-rules/<%= rule.rule_id %>/edit\" \r\n                                                       class=\"btn btn-outline-primary\" title=\"Edit\">\r",
+          "line": 95
+        },
+        {
+          "url": "/admin/automation-rules/new",
+          "type": "href",
+          "context": "                            <p class=\"text-muted\">Create your first automation rule to get started with automated checklist assignments.</p>\r\n                            <a href=\"/admin/automation-rules/new\" class=\"btn btn-primary\">\r\n                                <i class=\"fas fa-plus\"></i> Create First Rule\r",
+          "line": 117
+        }
+      ],
+      "linkCount": 4
+    },
+    {
+      "file": "dhl_login\\views\\admin\\create-user.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\create-user.ejs",
+      "links": [
+        {
+          "url": "/app/index.html",
+          "type": "href",
+          "context": "    <div class=\"actions\">\r\n      <a href=\"/app/index.html\" class=\"btn btn-primary btn-inline\">Start Checklists</a>\r\n    </div>\r",
+          "line": 132
+        },
+        {
+          "url": "/admin/users",
+          "type": "href",
+          "context": "\r\n  <form action=\"/admin/users\" method=\"POST\" novalidate>\r\n    <input type=\"hidden\" name=\"_csrf\" value=\"<%- _csrf %>\">\r",
+          "line": 23
+        }
+      ],
+      "linkCount": 2
+    },
+    {
+      "file": "dhl_login\\views\\admin\\dashboard.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\dashboard.ejs",
+      "links": [
+        {
+          "url": "/admin/users/new",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/admin/users/new\" class=\"btn btn-primary\">\r\n          ➕ Create New User\r",
+          "line": 233
+        },
+        {
+          "url": "/admin/users",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/users\" class=\"btn btn-secondary\">\r\n          📋 View All Users\r",
+          "line": 236
+        },
+        {
+          "url": "/admin/reports",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/admin/reports\" class=\"btn btn-primary\">\r\n          📈 View Reports\r",
+          "line": 251
+        },
+        {
+          "url": "/admin/logs",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/logs\" class=\"btn btn-secondary\">\r\n          📝 System Logs\r",
+          "line": 254
+        },
+        {
+          "url": "/admin/postgresql",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/admin/postgresql\" class=\"btn btn-primary\">\r\n          📊 PostgreSQL Dashboard\r",
+          "line": 269
+        },
+        {
+          "url": "/admin/postgresql/submissions",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/postgresql/submissions\" class=\"btn btn-secondary\">\r\n          📋 View Submissions\r",
+          "line": 272
+        },
+        {
+          "url": "/admin/automation-rules",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/admin/automation-rules\" class=\"btn btn-primary\">\r\n          🔧 Manage Rules\r",
+          "line": 287
+        },
+        {
+          "url": "/admin/automation-rules/new",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/automation-rules/new\" class=\"btn btn-secondary\">\r\n          ➕ Create Rule\r",
+          "line": 290
+        },
+        {
+          "url": "/admin/settings",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/admin/settings\" class=\"btn btn-primary\">\r\n          🔧 Settings\r",
+          "line": 305
+        },
+        {
+          "url": "/admin/backup",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/backup\" class=\"btn btn-secondary\">\r\n          💾 Backup\r",
+          "line": 308
+        },
+        {
+          "url": "/app",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/app\" class=\"btn btn-primary\">\r\n          🚀 Launch App\r",
+          "line": 323
+        },
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/dashboard\" class=\"btn btn-secondary\">\r\n          📱 User Dashboard\r",
+          "line": 326
+        }
+      ],
+      "linkCount": 12
+    },
+    {
+      "file": "dhl_login\\views\\admin\\logs.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\logs.ejs",
+      "links": [
+        {
+          "url": "/admin",
+          "type": "href",
+          "context": "<div class=\"logs-dashboard\">\n  <a href=\"/admin\" class=\"back-link\">\n    <i class=\"fas fa-arrow-left\"></i>",
+          "line": 152
+        }
+      ],
+      "linkCount": 1
+    },
+    {
+      "file": "dhl_login\\views\\admin\\postgresql-dashboard.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\postgresql-dashboard.ejs",
+      "links": [
+        {
+          "url": "/admin/postgresql/submissions/<%= submission.submission_id %>",
+          "type": "href",
+          "context": "            <tr>\r\n              <td><a href=\"/admin/postgresql/submissions/<%= submission.submission_id %>\" style=\"color: #2e7d32; text-decoration: none;\"><%= submission.submission_id %></a></td>\r\n              <td><%= submission.checklist_title %></td>\r",
+          "line": 241
+        },
+        {
+          "url": "/admin/postgresql/submissions",
+          "type": "href",
+          "context": "  <div class=\"action-buttons\">\r\n    <a href=\"/admin/postgresql/submissions\" class=\"btn btn-primary\">📋 View All Submissions</a>\r\n    <a href=\"/admin\" class=\"btn btn-secondary\">← Back to Admin Dashboard</a>\r",
+          "line": 260
+        },
+        {
+          "url": "/admin",
+          "type": "href",
+          "context": "    <a href=\"/admin/postgresql/submissions\" class=\"btn btn-primary\">📋 View All Submissions</a>\r\n    <a href=\"/admin\" class=\"btn btn-secondary\">← Back to Admin Dashboard</a>\r\n  </div>\r",
+          "line": 261
+        }
+      ],
+      "linkCount": 3
+    },
+    {
+      "file": "dhl_login\\views\\admin\\postgresql-submission-detail.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\postgresql-submission-detail.ejs",
+      "links": [
+        {
+          "url": "/admin/postgresql/submissions",
+          "type": "href",
+          "context": "  <div class=\"action-buttons\">\r\n    <a href=\"/admin/postgresql/submissions\" class=\"btn btn-secondary\">← Back to Submissions</a>\r\n    <a href=\"/admin/postgresql\" class=\"btn btn-secondary\">← PostgreSQL Dashboard</a>\r",
+          "line": 241
+        },
+        {
+          "url": "/admin/postgresql",
+          "type": "href",
+          "context": "    <a href=\"/admin/postgresql/submissions\" class=\"btn btn-secondary\">← Back to Submissions</a>\r\n    <a href=\"/admin/postgresql\" class=\"btn btn-secondary\">← PostgreSQL Dashboard</a>\r\n  </div>\r",
+          "line": 242
+        }
+      ],
+      "linkCount": 2
+    },
+    {
+      "file": "dhl_login\\views\\admin\\postgresql-submissions.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\postgresql-submissions.ejs",
+      "links": [
+        {
+          "url": "/admin/postgresql",
+          "type": "href",
+          "context": "  <div class=\"action-buttons\">\r\n    <a href=\"/admin/postgresql\" class=\"btn btn-secondary\">← Back to PostgreSQL Dashboard</a>\r\n    <a href=\"/admin\" class=\"btn btn-secondary\">← Back to Admin Dashboard</a>\r",
+          "line": 211
+        },
+        {
+          "url": "/admin",
+          "type": "href",
+          "context": "    <a href=\"/admin/postgresql\" class=\"btn btn-secondary\">← Back to PostgreSQL Dashboard</a>\r\n    <a href=\"/admin\" class=\"btn btn-secondary\">← Back to Admin Dashboard</a>\r\n  </div>\r",
+          "line": 212
+        },
+        {
+          "url": "/admin/postgresql/submissions/<%= submission.submission_id %>",
+          "type": "href",
+          "context": "              <td>\r\n                <a href=\"/admin/postgresql/submissions/<%= submission.submission_id %>\" class=\"submission-link\">\r\n                  <%= submission.submission_id %>\r",
+          "line": 233
+        },
+        {
+          "url": "?page=<%= currentPage - 1 %>",
+          "type": "href",
+          "context": "        <% if (hasPrevPage) { %>\r\n          <a href=\"?page=<%= currentPage - 1 %>\">← Previous</a>\r\n        <% } else { %>\r",
+          "line": 267
+        },
+        {
+          "url": "?page=<%= currentPage + 1 %>",
+          "type": "href",
+          "context": "        <% if (hasNextPage) { %>\r\n          <a href=\"?page=<%= currentPage + 1 %>\">Next →</a>\r\n        <% } else { %>\r",
+          "line": 275
+        }
+      ],
+      "linkCount": 5
+    },
+    {
+      "file": "dhl_login\\views\\admin\\reports.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\admin\\reports.ejs",
+      "links": [
+        {
+          "url": "/admin",
+          "type": "href",
+          "context": "<div class=\"reports-dashboard\">\n  <a href=\"/admin\" class=\"back-link\">\n    <i class=\"fas fa-arrow-left\"></i>",
+          "line": 218
+        },
+        {
+          "url": "/admin/postgresql/submissions",
+          "type": "href",
+          "context": "        <div class=\"report-actions\">\n          <a href=\"/admin/postgresql/submissions\" class=\"btn btn-primary\">\n            <i class=\"fas fa-list\"></i> View Submissions",
+          "line": 283
+        },
+        {
+          "url": "/admin/postgresql",
+          "type": "href",
+          "context": "          </a>\n          <a href=\"/admin/postgresql\" class=\"btn btn-secondary\">\n            <i class=\"fas fa-database\"></i> Database View",
+          "line": 286
+        },
+        {
+          "url": "/admin/logs",
+          "type": "href",
+          "context": "          </a>\n          <a href=\"/admin/logs\" class=\"btn btn-secondary\">\n            <i class=\"fas fa-history\"></i> Audit Logs",
+          "line": 306
+        },
+        {
+          "url": "/admin/users/new",
+          "type": "href",
+          "context": "        <div class=\"report-actions\">\n          <a href=\"/admin/users/new\" class=\"btn btn-primary\">\n            <i class=\"fas fa-users\"></i> Manage Users",
+          "line": 323
+        },
+        {
+          "url": "/admin/automation-rules",
+          "type": "href",
+          "context": "        <div class=\"report-actions\">\n          <a href=\"/admin/automation-rules\" class=\"btn btn-primary\">\n            <i class=\"fas fa-cogs\"></i> View Rules",
+          "line": 343
+        },
+        {
+          "url": "/admin/automation-rules/new",
+          "type": "href",
+          "context": "          </a>\n          <a href=\"/admin/automation-rules/new\" class=\"btn btn-success\">\n            <i class=\"fas fa-plus\"></i> Create Rule",
+          "line": 346
+        }
+      ],
+      "linkCount": 7
+    },
+    {
+      "file": "dhl_login\\views\\compliance\\dashboard.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\compliance\\dashboard.ejs",
+      "links": [
+        {
+          "url": "/compliance/metrics",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/compliance/metrics\" class=\"btn btn-primary\">\r\n          📈 View Metrics\r",
+          "line": 229
+        },
+        {
+          "url": "/manager/performance",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/manager/performance\" class=\"btn btn-secondary\">\r\n          📊 Team Performance\r",
+          "line": 232
+        },
+        {
+          "url": "/compliance/audit",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/compliance/audit\" class=\"btn btn-primary\">\r\n          🔍 View Audit Trail\r",
+          "line": 247
+        },
+        {
+          "url": "/admin/postgresql",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/postgresql\" class=\"btn btn-secondary\">\r\n          🗄️ Raw Data\r",
+          "line": 250
+        },
+        {
+          "url": "/compliance/non-compliance",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/compliance/non-compliance\" class=\"btn btn-primary\">\r\n          ⚠️ View Reports\r",
+          "line": 265
+        },
+        {
+          "url": "/compliance/validation-trends",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/compliance/validation-trends\" class=\"btn btn-secondary\">\r\n          📈 Validation Trends\r",
+          "line": 268
+        },
+        {
+          "url": "/compliance/validation-trends",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/compliance/validation-trends\" class=\"btn btn-primary\">\r\n          📈 View Trends\r",
+          "line": 283
+        },
+        {
+          "url": "/compliance/metrics",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/compliance/metrics\" class=\"btn btn-secondary\">\r\n          📊 Detailed Metrics\r",
+          "line": 286
+        }
+      ],
+      "linkCount": 8
+    },
+    {
+      "file": "dhl_login\\views\\compliance\\metrics.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\compliance\\metrics.ejs",
+      "links": [
+        {
+          "url": "/compliance",
+          "type": "href",
+          "context": "  <div style=\"margin-top: 2rem; text-align: center;\">\r\n    <a href=\"/compliance\" class=\"btn btn-secondary\">← Back to Compliance Dashboard</a>\r\n    <a href=\"/compliance/audit\" class=\"btn btn-primary\">View Audit Trail →</a>\r",
+          "line": 259
+        },
+        {
+          "url": "/compliance/audit",
+          "type": "href",
+          "context": "    <a href=\"/compliance\" class=\"btn btn-secondary\">← Back to Compliance Dashboard</a>\r\n    <a href=\"/compliance/audit\" class=\"btn btn-primary\">View Audit Trail →</a>\r\n  </div>\r",
+          "line": 260
+        }
+      ],
+      "linkCount": 2
+    },
+    {
+      "file": "dhl_login\\views\\dashboard.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\dashboard.ejs",
+      "links": [
+        {
+          "url": "/app/index.html",
+          "type": "href",
+          "context": "      <div style=\"display: flex; flex-direction: column; gap: 0.5rem;\">\r\n        <a href=\"/app/index.html\" class=\"btn btn-primary\">\r\n          <i class=\"fas fa-plus\"></i> Start New Checklist\r",
+          "line": 252
+        },
+        {
+          "url": "/forgot-password",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/forgot-password\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-key\"></i> Change Password\r",
+          "line": 258
+        },
+        {
+          "url": "/compliance",
+          "type": "href",
+          "context": "      <div style=\"display: flex; flex-direction: column; gap: 0.5rem;\">\r\n        <a href=\"/compliance\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-shield-alt\"></i> Compliance Dashboard\r",
+          "line": 286
+        },
+        {
+          "url": "/compliance/metrics",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/compliance/metrics\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-chart-bar\"></i> Compliance Metrics\r",
+          "line": 289
+        },
+        {
+          "url": "/compliance/audit",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/compliance/audit\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-search\"></i> Audit Trail\r",
+          "line": 292
+        },
+        {
+          "url": "/compliance/non-compliance",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/compliance/non-compliance\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-exclamation-triangle\"></i> Non-Compliance Reports\r",
+          "line": 295
+        },
+        {
+          "url": "/manager",
+          "type": "href",
+          "context": "      <div style=\"display: flex; flex-direction: column; gap: 0.5rem;\">\r\n        <a href=\"/manager\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-users\"></i> Manager Dashboard\r",
+          "line": 310
+        },
+        {
+          "url": "/manager/teams",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/manager/teams\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-users-cog\"></i> Team Management\r",
+          "line": 313
+        },
+        {
+          "url": "/manager/performance",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/manager/performance\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-chart-line\"></i> Performance Analytics\r",
+          "line": 316
+        },
+        {
+          "url": "/manager/assignments",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/manager/assignments\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-tasks\"></i> Manual Assignments\r",
+          "line": 319
+        },
+        {
+          "url": "/admin",
+          "type": "href",
+          "context": "      <div style=\"display: flex; flex-direction: column; gap: 0.5rem;\">\r\n        <a href=\"/admin\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-tachometer-alt\"></i> Admin Dashboard\r",
+          "line": 334
+        },
+        {
+          "url": "/admin/postgresql",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/postgresql\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-database\"></i> PostgreSQL Dashboard\r",
+          "line": 337
+        },
+        {
+          "url": "/admin/automation-rules",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/automation-rules\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-robot\"></i> Automation Rules\r",
+          "line": 340
+        },
+        {
+          "url": "/admin/users/new",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/users/new\" class=\"btn btn-secondary\">\r\n          <i class=\"fas fa-user-plus\"></i> Create User\r",
+          "line": 343
+        },
+        {
+          "url": "/app/index.html",
+          "type": "href",
+          "context": "        // Redirect to the checklist application\r\n        window.location.href = '/app/index.html';\r\n    } else {\r",
+          "line": 568
+        },
+        {
+          "url": "/app/index.html",
+          "type": "href",
+          "context": "        // Redirect to the checklist application\r\n        window.location.href = '/app/index.html';\r\n    } else {\r",
+          "line": 568
+        }
+      ],
+      "linkCount": 16
+    },
+    {
+      "file": "dhl_login\\views\\error.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\error.ejs",
+      "links": [
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "            \r\n            <a href=\"/dashboard\" class=\"btn btn-primary\">\r\n                🏠 Dashboard\r",
+          "line": 175
+        },
+        {
+          "url": "/login-page",
+          "type": "href",
+          "context": "            \r\n            <a href=\"/login-page\" class=\"btn btn-home\">\r\n                🔐 Login\r",
+          "line": 179
+        },
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "            setTimeout(() => {\r\n                window.location.href = '/dashboard';\r\n            }, 30000);\r",
+          "line": 218
+        },
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "            setTimeout(() => {\r\n                window.location.href = '/dashboard';\r\n            }, 30000);\r",
+          "line": 218
+        }
+      ],
+      "linkCount": 4
+    },
+    {
+      "file": "dhl_login\\views\\forgot-password.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\forgot-password.ejs",
+      "links": [
+        {
+          "url": "/login-page",
+          "type": "href",
+          "context": "    <div class=\"actions\" style=\"margin-top: 1rem;\">\r\n      <a href=\"/login-page\" class=\"btn btn-secondary btn-inline\">Back to Login</a>\r\n    </div>\r",
+          "line": 20
+        },
+        {
+          "url": "/login-page",
+          "type": "href",
+          "context": "      <div class=\"actions\">\r\n        <a href=\"/login-page\" class=\"btn btn-primary\">Go to Login</a>\r\n      </div>\r",
+          "line": 79
+        }
+      ],
+      "linkCount": 2
+    },
+    {
+      "file": "dhl_login\\views\\layouts\\main.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\layouts\\main.ejs",
+      "links": [
+        {
+          "url": "/css/dhl-styles.css",
+          "type": "href",
+          "context": "  <!-- Link to the new central stylesheet -->\r\n  <link rel=\"stylesheet\" href=\"/css/dhl-styles.css\">\r\n</head>\r",
+          "line": 9
+        },
+        {
+          "url": "/logout-page",
+          "type": "href",
+          "context": "        <span>Hi, <%= user.username %></span>\r\n        | <a href=\"/logout-page\">Logout</a>\r\n      </div>\r",
+          "line": 17
+        }
+      ],
+      "linkCount": 2
+    },
+    {
+      "file": "dhl_login\\views\\layouts\\test_layout.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\layouts\\test_layout.ejs",
+      "links": [],
+      "linkCount": 0
+    },
+    {
+      "file": "dhl_login\\views\\login.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\login.ejs",
+      "links": [
+        {
+          "url": "/forgot-password",
+          "type": "href",
+          "context": "  <div class=\"forgot-password-link\" style=\"text-align: center; margin-top: 1rem;\">\r\n    <a href=\"/forgot-password\" style=\"color: #D40511; text-decoration: none; font-size: 0.9rem;\">Forgot/Reset your password?</a>\r\n  </div>\r",
+          "line": 27
+        },
+        {
+          "url": "/login-page",
+          "type": "href",
+          "context": "\r\n  <form action=\"/login-page\" method=\"POST\" autocomplete=\"off\">\r\n    <input type=\"hidden\" name=\"_csrf\" value=\"<%- _csrf %>\">\r",
+          "line": 7
+        }
+      ],
+      "linkCount": 2
+    },
+    {
+      "file": "dhl_login\\views\\manager\\assignments.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\manager\\assignments.ejs",
+      "links": [
+        {
+          "url": "/manager",
+          "type": "href",
+          "context": "<div class=\"assignments-container\">\r\n  <a href=\"/manager\" class=\"back-link\">\r\n    ← Back to Manager Dashboard\r",
+          "line": 222
+        }
+      ],
+      "linkCount": 1
+    },
+    {
+      "file": "dhl_login\\views\\manager\\dashboard.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\manager\\dashboard.ejs",
+      "links": [
+        {
+          "url": "/manager/teams",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/manager/teams\" class=\"btn btn-primary\">\r\n          👥 Manage Teams\r",
+          "line": 236
+        },
+        {
+          "url": "/manager/assignments",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/manager/assignments\" class=\"btn btn-secondary\">\r\n          📋 Manual Assignments\r",
+          "line": 239
+        },
+        {
+          "url": "/manager/performance",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/manager/performance\" class=\"btn btn-primary\">\r\n          📈 View Analytics\r",
+          "line": 254
+        },
+        {
+          "url": "/admin/postgresql",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/admin/postgresql\" class=\"btn btn-secondary\">\r\n          🗄️ Raw Data\r",
+          "line": 257
+        },
+        {
+          "url": "/app",
+          "type": "href",
+          "context": "      <div class=\"card-actions\">\r\n        <a href=\"/app\" class=\"btn btn-primary\">\r\n          🚀 Launch App\r",
+          "line": 272
+        },
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "        </a>\r\n        <a href=\"/dashboard\" class=\"btn btn-secondary\">\r\n          📱 User Dashboard\r",
+          "line": 275
+        }
+      ],
+      "linkCount": 6
+    },
+    {
+      "file": "dhl_login\\views\\manager\\performance.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\manager\\performance.ejs",
+      "links": [
+        {
+          "url": "/manager",
+          "type": "href",
+          "context": "<div class=\"performance-container\">\r\n  <a href=\"/manager\" class=\"back-link\">\r\n    ← Back to Manager Dashboard\r",
+          "line": 240
+        }
+      ],
+      "linkCount": 1
+    },
+    {
+      "file": "dhl_login\\views\\manager\\teams.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\manager\\teams.ejs",
+      "links": [
+        {
+          "url": "/manager",
+          "type": "href",
+          "context": "<div class=\"teams-container\">\r\n  <a href=\"/manager\" class=\"back-link\">\r\n    ← Back to Manager Dashboard\r",
+          "line": 158
+        }
+      ],
+      "linkCount": 1
+    },
+    {
+      "file": "dhl_login\\views\\test_page.ejs",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\views\\test_page.ejs",
+      "links": [],
+      "linkCount": 0
+    }
+  ],
+  "routes": [
+    {
+      "file": "dhl_login\\routes\\admin.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\routes\\admin.js",
+      "routes": [
+        {
+          "method": "GET",
+          "route": "/",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 32,
+          "context": "// Admin dashboard or landing page\r\nrouter.get('/', ensureAuthenticated, ensureAdmin, (req, res) => {\r\n  console.log('[Admin Dashboard] User accessing admin dashboard:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/reports",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 38,
+          "context": "// System Reports Dashboard\r\nrouter.get('/reports', ensureAuthenticated, ensureAdmin, async (req, res) => {\r\n  console.log('[Admin Reports] User accessing reports dashboard:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/logs",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 120,
+          "context": "// System Logs Dashboard\r\nrouter.get('/logs', ensureAuthenticated, ensureAdmin, async (req, res) => {\r\n  console.log('[Admin Logs] User accessing logs dashboard:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/users/new",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 151,
+          "context": "// GET route to display the new user creation form\r\nrouter.get('/users/new', ensureAuthenticated, ensureAdmin, lusca.csrf(), (req, res) => {\r\n  console.log('[Admin Create User] Route accessed by user:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "POST",
+          "route": "/users",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 177,
+          "context": "// POST route to handle new user creation\r\nrouter.post('/users', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {\r\n  const { username, password, firstName, lastName, securityQuestion1Id, securityAnswer1, securityQuestion2Id, securityAnswer2 } = req.body;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/postgresql",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 294,
+          "context": "// Main PostgreSQL dashboard\r\nrouter.get('/postgresql', ensureAuthenticated, ensureAdmin, async (req, res) => {\r\n  try {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/postgresql/submissions",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 341,
+          "context": "// View all checklist submissions\r\nrouter.get('/postgresql/submissions', ensureAuthenticated, ensureAdmin, async (req, res) => {\r\n  try {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/postgresql/submissions/:id",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 375,
+          "context": "// View submission details\r\nrouter.get('/postgresql/submissions/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {\r\n  try {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/automation-rules",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 433,
+          "context": "// View all automation rules\r\nrouter.get('/automation-rules', ensureAuthenticated, ensureAdmin, async (req, res) => {\r\n  try {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/automation-rules/new",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 455,
+          "context": "// Show form to create new automation rule\r\nrouter.get('/automation-rules/new', ensureAuthenticated, ensureAdmin, lusca.csrf(), (req, res) => {\r\n  res.render('admin/automation-rule-form', {\r"
+        },
+        {
+          "method": "POST",
+          "route": "/automation-rules",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 468,
+          "context": "// Create new automation rule\r\nrouter.post('/automation-rules', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {\r\n  const {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/automation-rules/:id/edit",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 565,
+          "context": "// Show form to edit automation rule\r\nrouter.get('/automation-rules/:id/edit', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {\r\n  try {\r"
+        },
+        {
+          "method": "POST",
+          "route": "/automation-rules/:id",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 592,
+          "context": "// Update automation rule\r\nrouter.post('/automation-rules/:id', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {\r\n  const ruleId = req.params.id;\r"
+        },
+        {
+          "method": "POST",
+          "route": "/automation-rules/:id/delete",
+          "file": "dhl_login\\routes\\admin.js",
+          "line": 688,
+          "context": "// Delete automation rule\r\nrouter.post('/automation-rules/:id/delete', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {\r\n  try {\r"
+        }
+      ],
+      "routeCount": 14
+    },
+    {
+      "file": "dhl_login\\routes\\auth.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\routes\\auth.js",
+      "routes": [
+        {
+          "method": "GET",
+          "route": "/security-questions",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 50,
+          "context": "// 1. Get Security Questions: GET /security-questions\r\nrouter.get('/security-questions', (req, res) => {\r\n    const questions = getSecurityQuestions();\r"
+        },
+        {
+          "method": "POST",
+          "route": "/register",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 56,
+          "context": "// 2. Registration: POST /register\r\nrouter.post('/register', registrationLimiter, asyncHandler(async (req, res) => {\r\n    const { username, password, securityAnswers } = req.body;\r"
+        },
+        {
+          "method": "POST",
+          "route": "/login-api",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 105,
+          "context": "// This route will be mounted under /api/auth, so full path is /api/auth/login-api\r\nrouter.post('/login-api', authApiLimiter, asyncHandler(async (req, res) => {\r\n    const { username, password } = req.body;\r"
+        },
+        {
+          "method": "POST",
+          "route": "/request-password-reset-questions",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 138,
+          "context": "// 4. Request Password Reset - Step 1: Get Security Questions for User\r\nrouter.post('/request-password-reset-questions', authApiLimiter, async (req, res) => {\r\n    const { username } = req.body;\r"
+        },
+        {
+          "method": "POST",
+          "route": "/verify-security-answers",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 176,
+          "context": "// 5. Request Password Reset - Step 2: Verify Security Answers & Get Reset Token\r\nrouter.post('/verify-security-answers', authApiLimiter, async (req, res) => {\r\n    const { username, answers } = req.body;\r"
+        },
+        {
+          "method": "POST",
+          "route": "/reset-password",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 253,
+          "context": "// 6. Reset Password: POST /reset-password\r\nrouter.post('/reset-password', authApiLimiter, async (req, res) => {\r\n    const { username, passwordResetToken, newPassword } = req.body;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/issue-jwt-for-session",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 292,
+          "context": "// This route will be mounted under /api/auth, so full path is /api/auth/issue-jwt-for-session\r\nrouter.get('/issue-jwt-for-session', (req, res) => {\r\n    console.log(`[Auth Router /issue-jwt-for-session] Received request. Path: ${req.path}`);\r"
+        },
+        {
+          "method": "POST",
+          "route": "/token",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 326,
+          "context": "// 8. Get JWT token for dashboard: POST /token (Requires Session)\r\nrouter.post('/token', (req, res) => {\r\n    if (!req.isAuthenticated || !req.isAuthenticated()) {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/me",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 362,
+          "context": "// This route will be mounted under /api/auth, so full path is /api/auth/me\r\nrouter.get('/me', authenticateJwt, (req, res) => {\r\n    // req.user is populated by authenticateJwt middleware\r"
+        },
+        {
+          "method": "GET",
+          "route": "/users/by-role/:roleName",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 374,
+          "context": "// This route will be mounted under /api/auth, so full path is /api/auth/users/by-role/:roleName\r\nrouter.get('/users/by-role/:roleName', authenticateJwt, asyncHandler(async (req, res) => {\r\n    const { roleName } = req.params;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/users/:userId/details",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 425,
+          "context": "// This route will be mounted under /api/auth, so full path is /api/auth/users/:userId/details\r\nrouter.get('/users/:userId/details', authenticateJwt, asyncHandler(async (req, res) => {\r\n    const { userId } = req.params;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/users",
+          "file": "dhl_login\\routes\\auth.js",
+          "line": 482,
+          "context": "// This route will be mounted under /api/auth, so full path is /api/auth/users\r\nrouter.get('/users', authenticateJwt, asyncHandler(async (req, res) => {\r\n    const requestingUser = req.user;\r"
+        }
+      ],
+      "routeCount": 12
+    },
+    {
+      "file": "dhl_login\\routes\\checklist.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\routes\\checklist.js",
+      "routes": [
+        {
+          "method": "GET",
+          "route": "/",
+          "file": "dhl_login\\routes\\checklist.js",
+          "line": 19,
+          "context": "\r\nrouter.get('/', ensureAuth, (req,res)=>{\r\n  console.log('[Checklist Router] Serving dashboard for / route within checklist router');\r"
+        }
+      ],
+      "routeCount": 1
+    },
+    {
+      "file": "dhl_login\\routes\\compliance.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\routes\\compliance.js",
+      "routes": [
+        {
+          "method": "GET",
+          "route": "/",
+          "file": "dhl_login\\routes\\compliance.js",
+          "line": 18,
+          "context": "// Compliance dashboard main page\r\nrouter.get('/', ensureAuthenticated, ensureCompliance, (req, res) => {\r\n  console.log('[Compliance Dashboard] User accessing compliance dashboard:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/metrics",
+          "file": "dhl_login\\routes\\compliance.js",
+          "line": 27,
+          "context": "// Compliance metrics page\r\nrouter.get('/metrics', ensureAuthenticated, ensureCompliance, (req, res) => {\r\n  console.log('[Compliance Metrics] User accessing compliance metrics:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/audit",
+          "file": "dhl_login\\routes\\compliance.js",
+          "line": 36,
+          "context": "// Audit trail page\r\nrouter.get('/audit', ensureAuthenticated, ensureCompliance, (req, res) => {\r\n  console.log('[Compliance Audit] User accessing audit trail:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/non-compliance",
+          "file": "dhl_login\\routes\\compliance.js",
+          "line": 45,
+          "context": "// Non-compliance reports page\r\nrouter.get('/non-compliance', ensureAuthenticated, ensureCompliance, (req, res) => {\r\n  console.log('[Compliance Non-Compliance] User accessing non-compliance reports:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/validation-trends",
+          "file": "dhl_login\\routes\\compliance.js",
+          "line": 54,
+          "context": "// Validation trends page\r\nrouter.get('/validation-trends', ensureAuthenticated, ensureCompliance, (req, res) => {\r\n  console.log('[Compliance Validation Trends] User accessing validation trends:', req.user ? req.user.username : 'No user');\r"
+        }
+      ],
+      "routeCount": 5
+    },
+    {
+      "file": "dhl_login\\routes\\health.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\routes\\health.js",
+      "routes": [
+        {
+          "method": "GET",
+          "route": "/health",
+          "file": "dhl_login\\routes\\health.js",
+          "line": 16,
+          "context": " */\r\nrouter.get('/health', asyncHandler(async (req, res) => {\r\n    const healthStatus = {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/health/detailed",
+          "file": "dhl_login\\routes\\health.js",
+          "line": 34,
+          "context": " */\r\nrouter.get('/health/detailed', asyncHandler(async (req, res) => {\r\n    let databaseHealthy = false;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/health/database",
+          "file": "dhl_login\\routes\\health.js",
+          "line": 93,
+          "context": " */\r\nrouter.get('/health/database', asyncHandler(async (req, res) => {\r\n    let status = 'healthy';\r"
+        },
+        {
+          "method": "GET",
+          "route": "/health/error-test/:type",
+          "file": "dhl_login\\routes\\health.js",
+          "line": 126,
+          "context": " */\r\nrouter.get('/health/error-test/:type', asyncHandler(async (req, res) => {\r\n    const { type } = req.params;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/health/auth-test",
+          "file": "dhl_login\\routes\\health.js",
+          "line": 157,
+          "context": " */\r\nrouter.get('/health/auth-test', asyncHandler(async (req, res) => {\r\n    const { generateToken, hashPassword, comparePassword } = require('../utils/auth');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/ready",
+          "file": "dhl_login\\routes\\health.js",
+          "line": 223,
+          "context": " */\r\nrouter.get('/ready', asyncHandler(async (req, res) => {\r\n    let isReady = true;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/live",
+          "file": "dhl_login\\routes\\health.js",
+          "line": 258,
+          "context": " */\r\nrouter.get('/live', (req, res) => {\r\n    res.status(200).json({\r"
+        }
+      ],
+      "routeCount": 7
+    },
+    {
+      "file": "dhl_login\\routes\\manager.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\routes\\manager.js",
+      "routes": [
+        {
+          "method": "GET",
+          "route": "/",
+          "file": "dhl_login\\routes\\manager.js",
+          "line": 18,
+          "context": "// Manager dashboard main page\r\nrouter.get('/', ensureAuthenticated, ensureManager, (req, res) => {\r\n  console.log('[Manager Dashboard] User accessing manager dashboard:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/teams",
+          "file": "dhl_login\\routes\\manager.js",
+          "line": 27,
+          "context": "// Team management page\r\nrouter.get('/teams', ensureAuthenticated, ensureManager, (req, res) => {\r\n  console.log('[Manager Teams] User accessing team management:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/performance",
+          "file": "dhl_login\\routes\\manager.js",
+          "line": 36,
+          "context": "// Team performance analytics page\r\nrouter.get('/performance', ensureAuthenticated, ensureManager, (req, res) => {\r\n  console.log('[Manager Performance] User accessing performance analytics:', req.user ? req.user.username : 'No user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/assignments",
+          "file": "dhl_login\\routes\\manager.js",
+          "line": 45,
+          "context": "// Manual assignment page\r\nrouter.get('/assignments', ensureAuthenticated, ensureManager, (req, res) => {\r\n  console.log('[Manager Assignments] User accessing manual assignments:', req.user ? req.user.username : 'No user');\r"
+        }
+      ],
+      "routeCount": 4
+    },
+    {
+      "file": "backend\\routes\\health.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\backend\\routes\\health.js",
+      "routes": [
+        {
+          "method": "GET",
+          "route": "/health",
+          "file": "backend\\routes\\health.js",
+          "line": 17,
+          "context": " */\r\nrouter.get('/health', asyncHandler(async (req, res) => {\r\n    const healthStatus = {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/health/detailed",
+          "file": "backend\\routes\\health.js",
+          "line": 35,
+          "context": " */\r\nrouter.get('/health/detailed', asyncHandler(async (req, res) => {\r\n    const dataDir = path.join(__dirname, '..', 'data');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/health/error-test/:type",
+          "file": "backend\\routes\\health.js",
+          "line": 110,
+          "context": " */\r\nrouter.get('/health/error-test/:type', asyncHandler(async (req, res) => {\r\n    const { type } = req.params;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/health/error-stats",
+          "file": "backend\\routes\\health.js",
+          "line": 150,
+          "context": " */\r\nrouter.get('/health/error-stats', asyncHandler(async (req, res) => {\r\n    const logsDir = path.join(__dirname, '..', 'logs');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/ready",
+          "file": "backend\\routes\\health.js",
+          "line": 189,
+          "context": " */\r\nrouter.get('/ready', asyncHandler(async (req, res) => {\r\n    // Check if essential directories exist\r"
+        },
+        {
+          "method": "GET",
+          "route": "/live",
+          "file": "backend\\routes\\health.js",
+          "line": 214,
+          "context": " */\r\nrouter.get('/live', (req, res) => {\r\n    res.status(200).json({\r"
+        }
+      ],
+      "routeCount": 6
+    },
+    {
+      "file": "dhl_login\\app.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\dhl_login\\app.js",
+      "routes": [
+        {
+          "method": "GET",
+          "route": "/dhl-logo.svg",
+          "file": "dhl_login\\app.js",
+          "line": 123,
+          "context": "// Serve the logo specifically\r\napp.get('/dhl-logo.svg', (req, res) => {\r\n  res.sendFile(path.join(__dirname, 'views', 'layouts', 'dhl-logo.svg'));\r"
+        },
+        {
+          "method": "GET",
+          "route": "/app/validate-checklist/:id",
+          "file": "dhl_login\\app.js",
+          "line": 148,
+          "context": "// The ensureWebAuthenticated middleware protects it.\r\napp.get('/app/validate-checklist/:id', ensureWebAuthenticated, (req, res) => {\r\n    res.sendFile(path.join(__dirname, '..', 'Public', 'validate-checklist.html'));\r"
+        },
+        {
+          "method": "GET",
+          "route": "/app",
+          "file": "dhl_login\\app.js",
+          "line": 169,
+          "context": "\r\napp.get('/app', (req, res) => {\r\n    res.sendFile(path.join(__dirname, '..', 'Public', 'index.html'));\r"
+        },
+        {
+          "method": "GET",
+          "route": "/",
+          "file": "dhl_login\\app.js",
+          "line": 176,
+          "context": "// --- Web Page Routes ---\r\napp.get('/', (req, res) => {\r\n  res.redirect('/login-page');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/login-page",
+          "file": "dhl_login\\app.js",
+          "line": 180,
+          "context": "\r\napp.get('/login-page', lusca.csrf(), (req, res) => {\r\n  console.log(`[GET /login-page] Arrived at login page`);\r"
+        },
+        {
+          "method": "POST",
+          "route": "/login-page",
+          "file": "dhl_login\\app.js",
+          "line": 191,
+          "context": "\r\napp.post('/login-page', lusca.csrf(), (req, res, next) => {\r\n  console.log('[Login POST Start] req.session before passport.authenticate:', JSON.stringify(req.session));\r"
+        },
+        {
+          "method": "GET",
+          "route": "/logout-page",
+          "file": "dhl_login\\app.js",
+          "line": 242,
+          "context": "\r\napp.get('/logout-page', (req, res, next) => {\r\n  req.logout((err) => {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/dashboard",
+          "file": "dhl_login\\app.js",
+          "line": 253,
+          "context": "// --- Dashboard Route ---\r\napp.get('/dashboard', ensureWebAuthenticated, lusca.csrf(), (req, res) => {\r\n  // req.user is populated by Passport and made available to templates\r"
+        },
+        {
+          "method": "GET",
+          "route": "/forgot-password",
+          "file": "dhl_login\\app.js",
+          "line": 264,
+          "context": "// --- Password Reset Routes ---\r\napp.get('/forgot-password', lusca.csrf(), (req, res) => {\r\n  res.render('forgot-password', {\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/config",
+          "file": "dhl_login\\app.js",
+          "line": 276,
+          "context": "// Provide frontend configuration including backend API URL and supervisor email\r\napp.get('/api/config', (req, res) => {\r\n  console.log('[DEBUG] SUPERVISOR_EMAIL env var:', process.env.SUPERVISOR_EMAIL);\r"
+        },
+        {
+          "method": "GET",
+          "route": "/health/database",
+          "file": "dhl_login\\app.js",
+          "line": 325,
+          "context": "\r\napp.get('/health/database', async (req, res) => {\r\n  try {\r"
+        },
+        {
+          "method": "/API",
+          "route": "/api",
+          "file": "dhl_login\\app.js",
+          "line": 59,
+          "context": "// Apply CORS to API routes only (not to web pages)\r\napp.use('/api', cors(corsOptions));\r\napp.use('/api', apiLimiter); // Apply API rate limiting to all API routes\r"
+        },
+        {
+          "method": "/API",
+          "route": "/api",
+          "file": "dhl_login\\app.js",
+          "line": 60,
+          "context": "app.use('/api', cors(corsOptions));\r\napp.use('/api', apiLimiter); // Apply API rate limiting to all API routes\r\nconsole.log(`DHL Login CORS configured for API routes with allowed origins: ${allowedOrigins.join(', ')}`);\r"
+        },
+        {
+          "method": "/APP",
+          "route": "/app",
+          "file": "dhl_login\\app.js",
+          "line": 158,
+          "context": "// ADDED: Logging for /app requests to test if HTML files are being requested\r\napp.use('/app', (req, res, next) => {\r\n  console.log(`[App Static Middleware] Received request for: ${req.method} ${req.originalUrl}`);\r"
+        },
+        {
+          "method": "/APP",
+          "route": "/app",
+          "file": "dhl_login\\app.js",
+          "line": 167,
+          "context": "\r\napp.use('/app', express.static(path.join(__dirname, '..', 'Public')));\r\n\r"
+        },
+        {
+          "method": "/API/AUTH",
+          "route": "/api/auth",
+          "file": "dhl_login\\app.js",
+          "line": 290,
+          "context": "// --- API Routes ---\r\napp.use('/api/auth', authenticatedApiLimiter, require('./routes/auth')); // Mount API auth routes with lenient rate limiting\r\n\r"
+        },
+        {
+          "method": "/ADMIN",
+          "route": "/admin",
+          "file": "dhl_login\\app.js",
+          "line": 293,
+          "context": "// --- Admin Routes ---\r\napp.use('/admin', (req, res, next) => {\r\n  console.log(`[Admin Route Middleware] ${req.method} ${req.originalUrl} - User authenticated: ${req.isAuthenticated ? req.isAuthenticated() : false}`);\r"
+        },
+        {
+          "method": "/MANAGER",
+          "route": "/manager",
+          "file": "dhl_login\\app.js",
+          "line": 302,
+          "context": "// --- Manager Routes ---\r\napp.use('/manager', (req, res, next) => {\r\n  console.log(`[Manager Route Middleware] ${req.method} ${req.originalUrl} - User authenticated: ${req.isAuthenticated ? req.isAuthenticated() : false}`);\r"
+        },
+        {
+          "method": "/COMPLIANCE",
+          "route": "/compliance",
+          "file": "dhl_login\\app.js",
+          "line": 311,
+          "context": "// --- Compliance Routes ---\r\napp.use('/compliance', (req, res, next) => {\r\n  console.log(`[Compliance Route Middleware] ${req.method} ${req.originalUrl} - User authenticated: ${req.isAuthenticated ? req.isAuthenticated() : false}`);\r"
+        },
+        {
+          "method": "/CHECKLISTS",
+          "route": "/checklists",
+          "file": "dhl_login\\app.js",
+          "line": 320,
+          "context": "// --- Other Protected Routes ---\r\napp.use('/checklists', require('./routes/checklist')); // protected\r\n\r"
+        },
+        {
+          "method": "/",
+          "route": "/",
+          "file": "dhl_login\\app.js",
+          "line": 323,
+          "context": "// --- Health Check Routes ---\r\napp.use('/', require('./routes/health'));\r\n\r"
+        }
+      ],
+      "routeCount": 21
+    },
+    {
+      "file": "backend\\server.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\backend\\server.js",
+      "routes": [
+        {
+          "method": "POST",
+          "route": "/submit-form",
+          "file": "backend\\server.js",
+          "line": 191,
+          "context": "\r\napp.post('/submit-form', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const formData = req.body;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/validate/:id",
+          "file": "backend\\server.js",
+          "line": 410,
+          "context": "// Route to handle GET /validate/:id (load the validation page)\r\napp.get('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    console.log(`[Debug] GET /validate/:id - START - ID: ${req.params.id}`);\r"
+        },
+        {
+          "method": "POST",
+          "route": "/validate/:id",
+          "file": "backend\\server.js",
+          "line": 457,
+          "context": "// POST route to handle supervisor validation form submission\r\napp.post('/validate/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    console.log(`[Debug] POST /validate/:id - START - ID: ${req.params.id}`);\r"
+        },
+        {
+          "method": "GET",
+          "route": "/validate-status/:id",
+          "file": "backend\\server.js",
+          "line": 602,
+          "context": "// Endpoint to check validation status of a checklist\r\napp.get('/validate-status/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const fileId = req.params.id;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/view-checklist/:id",
+          "file": "backend\\server.js",
+          "line": 629,
+          "context": "// Endpoint to view the checklist data in the browser\r\napp.get('/view-checklist/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const fileId = req.params.id;  // Get the unique ID from the URL (timestamp)\r"
+        },
+        {
+          "method": "GET",
+          "route": "/view-checklist-html/:id",
+          "file": "backend\\server.js",
+          "line": 653,
+          "context": "// Endpoint to view the checklist data in a readable HTML format\r\napp.get('/view-checklist-html/:id', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const fileId = req.params.id;  // Get the unique ID from the URL (timestamp)\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/user/assignments",
+          "file": "backend\\server.js",
+          "line": 691,
+          "context": "// Get user's active checklist assignments\r\napp.get('/api/user/assignments', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/user/submissions",
+          "file": "backend\\server.js",
+          "line": 730,
+          "context": "// Get user's recent submissions\r\napp.get('/api/user/submissions', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/assignments/:assignmentId",
+          "file": "backend\\server.js",
+          "line": 775,
+          "context": "// Get assignment details with tasks\r\napp.get('/api/assignments/:assignmentId', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const assignmentId = req.params.assignmentId;\r"
+        },
+        {
+          "method": "PATCH",
+          "route": "/api/assignments/:assignmentId/status",
+          "file": "backend\\server.js",
+          "line": 848,
+          "context": "// Update assignment status (e.g., mark as in progress)\r\napp.patch('/api/assignments/:assignmentId/status', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const assignmentId = req.params.assignmentId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/teams",
+          "file": "backend\\server.js",
+          "line": 903,
+          "context": "// Get all teams (for managers and admins)\r\napp.get('/api/teams', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/teams/:teamId/members",
+          "file": "backend\\server.js",
+          "line": 945,
+          "context": "// Get team members for a specific team\r\napp.get('/api/teams/:teamId/members', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const teamId = req.params.teamId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/user/teams",
+          "file": "backend\\server.js",
+          "line": 983,
+          "context": "// Get teams for current user (what teams they belong to)\r\napp.get('/api/user/teams', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "POST",
+          "route": "/api/teams/:teamId/members",
+          "file": "backend\\server.js",
+          "line": 1014,
+          "context": "// Add user to team (for managers)\r\napp.post('/api/teams/:teamId/members', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const teamId = req.params.teamId;\r"
+        },
+        {
+          "method": "DELETE",
+          "route": "/api/teams/:teamId/members/:userId",
+          "file": "backend\\server.js",
+          "line": 1077,
+          "context": "// Remove user from team (for managers)\r\napp.delete('/api/teams/:teamId/members/:userId', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const teamId = req.params.teamId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/manager/stats",
+          "file": "backend\\server.js",
+          "line": 1128,
+          "context": "// Get manager dashboard statistics\r\napp.get('/api/manager/stats', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/manager/team-assignments",
+          "file": "backend\\server.js",
+          "line": 1266,
+          "context": "// Get team assignments overview for manager\r\napp.get('/api/manager/team-assignments', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/manager/team-performance",
+          "file": "backend\\server.js",
+          "line": 1364,
+          "context": "// Get team performance analytics for manager\r\napp.get('/api/manager/team-performance', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/manager/audit-trail",
+          "file": "backend\\server.js",
+          "line": 1466,
+          "context": "// Get audit trail for managers (Phase 3)\r\napp.get('/api/manager/audit-trail', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/manager/compliance-report",
+          "file": "backend\\server.js",
+          "line": 1519,
+          "context": "// Get compliance report for managers (Phase 3)\r\napp.get('/api/manager/compliance-report', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/analytics/submissions",
+          "file": "backend\\server.js",
+          "line": 1561,
+          "context": "// Get submission summary analytics\r\napp.get('/api/analytics/submissions', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/analytics/team-performance",
+          "file": "backend\\server.js",
+          "line": 1620,
+          "context": "// Get team performance analytics\r\napp.get('/api/analytics/team-performance', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/analytics/compliance",
+          "file": "backend\\server.js",
+          "line": 1660,
+          "context": "// Get compliance metrics\r\napp.get('/api/analytics/compliance', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/analytics/assignments",
+          "file": "backend\\server.js",
+          "line": 1697,
+          "context": "// Get assignment analytics\r\napp.get('/api/analytics/assignments', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/manager/available-checklists",
+          "file": "backend\\server.js",
+          "line": 1744,
+          "context": "// Get available checklists for manual assignment\r\napp.get('/api/manager/available-checklists', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "POST",
+          "route": "/api/manager/manual-assignment",
+          "file": "backend\\server.js",
+          "line": 1783,
+          "context": "// Create manual assignment\r\napp.post('/api/manager/manual-assignment', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const managerId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/manager/manual-assignments",
+          "file": "backend\\server.js",
+          "line": 1895,
+          "context": "// Get manual assignments created by manager\r\napp.get('/api/manager/manual-assignments', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const managerId = req.user.userId;\r"
+        },
+        {
+          "method": "PATCH",
+          "route": "/api/manager/manual-assignment/:assignmentId",
+          "file": "backend\\server.js",
+          "line": 1961,
+          "context": "// Update manual assignment status\r\napp.patch('/api/manager/manual-assignment/:assignmentId', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const managerId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/analytics/completion-trends",
+          "file": "backend\\server.js",
+          "line": 2024,
+          "context": "// Get team completion trends for analytics\r\napp.get('/api/analytics/completion-trends', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/analytics/validation-turnaround",
+          "file": "backend\\server.js",
+          "line": 2092,
+          "context": "// Get validation turnaround analytics\r\napp.get('/api/analytics/validation-turnaround', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/analytics/team-productivity",
+          "file": "backend\\server.js",
+          "line": 2129,
+          "context": "// Get team productivity metrics\r\napp.get('/api/analytics/team-productivity', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/user/stats",
+          "file": "backend\\server.js",
+          "line": 2194,
+          "context": "// Get user dashboard statistics\r\napp.get('/api/user/stats', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/compliance/overview",
+          "file": "backend\\server.js",
+          "line": 2250,
+          "context": "// Get compliance overview statistics\r\napp.get('/api/compliance/overview', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/compliance/metrics",
+          "file": "backend\\server.js",
+          "line": 2342,
+          "context": "// Get detailed compliance metrics with filtering\r\napp.get('/api/compliance/metrics', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/compliance/audit-trail",
+          "file": "backend\\server.js",
+          "line": 2389,
+          "context": "// Get audit trail with filtering\r\napp.get('/api/compliance/audit-trail', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/compliance/non-compliance",
+          "file": "backend\\server.js",
+          "line": 2460,
+          "context": "// Get non-compliance reports with drill-down capability\r\napp.get('/api/compliance/non-compliance', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/admin/scheduled-automation/status",
+          "file": "backend\\server.js",
+          "line": 2559,
+          "context": "// Get scheduled automation status\r\napp.get('/api/admin/scheduled-automation/status', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "GET",
+          "route": "/api/admin/rpa/status",
+          "file": "backend\\server.js",
+          "line": 2605,
+          "context": "// Get RPA integration status\r\napp.get('/api/admin/rpa/status', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "POST",
+          "route": "/api/admin/rpa/trigger",
+          "file": "backend\\server.js",
+          "line": 2648,
+          "context": "// Manually trigger RPA workflow (for testing)\r\napp.post('/api/admin/rpa/trigger', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {\r\n    const userId = req.user.userId;\r"
+        },
+        {
+          "method": "/",
+          "route": "/",
+          "file": "backend\\server.js",
+          "line": 2689,
+          "context": "// Health check routes\r\napp.use('/', require('./routes/health'));\r\n\r"
+        }
+      ],
+      "routeCount": 40
+    }
+  ],
+  "jsNavigation": [
+    {
+      "file": "Public\\config.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\config.js",
+      "navigation": [
+        {
+          "url": "/api/config",
+          "type": "javascript",
+          "method": "/API/CONFIG",
+          "file": "Public\\config.js",
+          "line": 24,
+          "context": "    try {\r\n        const response = await fetch('/api/config');\r\n        if (!response.ok) {\r"
+        }
+      ],
+      "navCount": 1
+    },
+    {
+      "file": "Public\\scripts.js",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\scripts.js",
+      "navigation": [
+        {
+          "url": "/login-page",
+          "type": "javascript",
+          "method": "/LOGIN-PAGE",
+          "file": "Public\\scripts.js",
+          "line": 15,
+          "context": "                // Redirect to login page if not authenticated\r\n                window.location.href = '/login-page';\r\n            } else {\r"
+        },
+        {
+          "url": "index.html",
+          "type": "javascript",
+          "method": "INDEX.HTML",
+          "file": "Public\\scripts.js",
+          "line": 338,
+          "context": "    function goToMenu() {\r\n        window.location.href = \"index.html\"; \r\n    }\r"
+        },
+        {
+          "url": "index.html",
+          "type": "javascript",
+          "method": "INDEX.HTML",
+          "file": "Public\\scripts.js",
+          "line": 452,
+          "context": "    //    backButton.addEventListener(\"click\", function() {\r\n    //        window.location.href = \"index.html\"; // Replace with the correct URL of your landing page\r\n    //    });\r"
+        },
+        {
+          "url": "/api/auth/issue-jwt-for-session",
+          "type": "javascript",
+          "method": "/API/AUTH/ISSUE-JWT-FOR-SESSION",
+          "file": "Public\\scripts.js",
+          "line": 10,
+          "context": "    try {\r\n        const response = await fetch('/api/auth/issue-jwt-for-session'); // Relative to dhl_login server\r\n        if (!response.ok) {\r"
+        },
+        {
+          "url": "/api/auth/issue-jwt-for-session",
+          "type": "javascript",
+          "method": "/API/AUTH/ISSUE-JWT-FOR-SESSION",
+          "file": "Public\\scripts.js",
+          "line": 49,
+          "context": "    try {\r\n        const response = await fetch('/api/auth/issue-jwt-for-session');\r\n        if (response.ok) {\r"
+        }
+      ],
+      "navCount": 5
+    }
+  ],
+  "staticChecklists": [
+    {
+      "file": "10_E_Cell_East_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\10_E_Cell_East_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>10-E Cell East Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 7194,
+      "lastModified": "2025-06-18T07:13:59.986Z"
+    },
+    {
+      "file": "11_F_Cell_West_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\11_F_Cell_West_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>11-F Cell West Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 5084,
+      "lastModified": "2025-06-18T07:13:59.987Z"
+    },
+    {
+      "file": "12_F_Cell_East_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\12_F_Cell_East_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>12-F Cell East Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 7479,
+      "lastModified": "2025-06-18T07:13:59.988Z"
+    },
+    {
+      "file": "13_All_Cells_Weekly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\13_All_Cells_Weekly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>13-All Cells Weekly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 7987,
+      "lastModified": "2025-06-18T07:13:59.989Z"
+    },
+    {
+      "file": "14_All_Cells_Weekly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\14_All_Cells_Weekly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>14-All Cells Weekly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 7415,
+      "lastModified": "2025-06-18T07:13:59.990Z"
+    },
+    {
+      "file": "15_A&B_Cells_LL_Quarterly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\15_A&B_Cells_LL_Quarterly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>15-A & B Cells LL Quarterly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 10618,
+      "lastModified": "2025-06-18T07:13:59.990Z"
+    },
+    {
+      "file": "16_D_Cell_LL_Quarterly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\16_D_Cell_LL_Quarterly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>16-D Cell LL Quarterly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 4674,
+      "lastModified": "2025-06-18T07:13:59.991Z"
+    },
+    {
+      "file": "17_A_Cell_High_Level_Quarterly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\17_A_Cell_High_Level_Quarterly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>17-A Cell High Level Quarterly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 4723,
+      "lastModified": "2025-06-18T07:13:59.991Z"
+    },
+    {
+      "file": "18_B_Cell_High_Level_Quarterly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\18_B_Cell_High_Level_Quarterly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>18-B Cell High Level Quarterly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 5143,
+      "lastModified": "2025-06-18T07:13:59.992Z"
+    },
+    {
+      "file": "19_C_Cell_High_Level_Quarterly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\19_C_Cell_High_Level_Quarterly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>19-C Cell High Level Quarterly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 5092,
+      "lastModified": "2025-06-18T07:13:59.992Z"
+    },
+    {
+      "file": "1_A_Cell_West_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\1_A_Cell_West_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>Checklist #1-A Cell West Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 6825,
+      "lastModified": "2025-06-18T07:13:59.994Z"
+    },
+    {
+      "file": "1_A_Cell_West_Side_Weekly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\1_A_Cell_West_Side_Weekly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>Checklist #1-A Cell West Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 6825,
+      "lastModified": "2025-06-18T07:13:59.994Z"
+    },
+    {
+      "file": "20_D_Cell_High_Level_Quarterly.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\20_D_Cell_High_Level_Quarterly.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>20 D Cell High Level Quarterly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 5259,
+      "lastModified": "2025-06-18T07:13:59.994Z"
+    },
+    {
+      "file": "21_E_Cell_High_Level_Quarterlyl.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\21_E_Cell_High_Level_Quarterlyl.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>21_E_Cell_High_Level_Quarterly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 4893,
+      "lastModified": "2025-06-18T07:13:59.995Z"
+    },
+    {
+      "file": "22_F_Cell_High_Level_Quarterlyl.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\22_F_Cell_High_Level_Quarterlyl.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>21-E Cell High Level Quarterly</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 6326,
+      "lastModified": "2025-06-18T07:13:59.996Z"
+    },
+    {
+      "file": "2_A_Cell_East_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\2_A_Cell_East_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>2 A Cell East Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 6378,
+      "lastModified": "2025-06-18T07:13:59.996Z"
+    },
+    {
+      "file": "2_B_Cell_East_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\2_B_Cell_East_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>2 A Cell East Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 6386,
+      "lastModified": "2025-06-18T07:13:59.997Z"
+    },
+    {
+      "file": "3_B_Cell_West_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\3_B_Cell_West_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>3 B Cell West Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 4554,
+      "lastModified": "2025-06-18T07:13:59.997Z"
+    },
+    {
+      "file": "4_B_Cell_East_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\4_B_Cell_East_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>4 B Cell East Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 9256,
+      "lastModified": "2025-06-18T07:13:59.998Z"
+    },
+    {
+      "file": "5_C_Cell_West_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\5_C_Cell_West_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>5 C Cell West Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 7139,
+      "lastModified": "2025-06-18T07:13:59.999Z"
+    },
+    {
+      "file": "6_C_Cell_East_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\6_C_Cell_East_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>6 C Cell East Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 8239,
+      "lastModified": "2025-06-18T07:14:00.000Z"
+    },
+    {
+      "file": "7_D_Cell_West_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\7_D_Cell_West_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>7-D Cell West Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 8012,
+      "lastModified": "2025-06-18T07:14:00.000Z"
+    },
+    {
+      "file": "8_D_Cell_East_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\8_D_Cell_East_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>8 D Cell East Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 7778,
+      "lastModified": "2025-06-18T07:14:00.001Z"
+    },
+    {
+      "file": "9_E_Cell_West_Side_Daily.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\9_E_Cell_West_Side_Daily.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>9-E Cell West Side Daily</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\n    <script src=\"config.js\"></script>",
+          "line": 7
+        }
+      ],
+      "size": 8430,
+      "lastModified": "2025-06-18T07:14:00.002Z"
+    },
+    {
+      "file": "barcode_generator.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\barcode_generator.html",
+      "links": [],
+      "size": 17798,
+      "lastModified": "2025-06-18T07:14:00.002Z"
+    },
+    {
+      "file": "checklist-template.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\checklist-template.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>Warehouse Sanitation Checklist</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 846,
+      "lastModified": "2025-06-18T07:14:00.003Z"
+    },
+    {
+      "file": "index.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\index.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 9
+        },
+        {
+          "url": "/login-page",
+          "type": "href",
+          "context": "            <p style=\"margin-bottom: 1rem; color: #666;\">Please log in to access the sanitation checklists</p>\r\n            <a href=\"/login-page\" class=\"btn btn-primary\" style=\"display: inline-block; padding: 12px 24px; background-color: #d40511; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;\">\r\n                🔐 Login to Access Checklists\r",
+          "line": 27
+        }
+      ],
+      "size": 2337,
+      "lastModified": "2025-06-18T07:14:00.030Z"
+    },
+    {
+      "file": "test-scan.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\test-scan.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>Scan Functionality Test</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n    <script src=\"config.js\"></script>\r",
+          "line": 7
+        }
+      ],
+      "size": 8664,
+      "lastModified": "2025-06-18T07:14:00.032Z"
+    },
+    {
+      "file": "user_login.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\user_login.html",
+      "links": [
+        {
+          "url": "dhl-unified.css",
+          "type": "href",
+          "context": "    <title>Login - Warehouse Sanitation Checklists</title>\r\n    <link rel=\"stylesheet\" href=\"dhl-unified.css\">\r\n</head>\r",
+          "line": 8
+        },
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "                if (data.success) {\r\n                    window.location.href = '/dashboard';\r\n                } else {\r",
+          "line": 76
+        },
+        {
+          "url": "/login",
+          "type": "href",
+          "context": "\r\n        <form id=\"loginForm\" action=\"/login\" method=\"POST\">\r\n            <div class=\"form-group\">\r",
+          "line": 17
+        },
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "                if (data.success) {\r\n                    window.location.href = '/dashboard';\r\n                } else {\r",
+          "line": 76
+        }
+      ],
+      "size": 3254,
+      "lastModified": "2025-06-18T07:14:00.033Z"
+    },
+    {
+      "file": "validate-checklist.html",
+      "fullPath": "C:\\sanitation-app-ubuntuv1_0\\sanitation-app-ubuntuv1_0-1\\sanitation-app-ubuntuv1_0\\Public\\validate-checklist.html",
+      "links": [
+        {
+          "url": "/app/index.html",
+          "type": "href",
+          "context": "        <div id=\"message-area\"></div>\r\n        <p style=\"margin-top: 20px;\"><a href=\"/app/index.html\">Back to Main Menu</a></p>\r\n\t<div class=\"footer\" style=\"text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #666;\">\r",
+          "line": 346
+        },
+        {
+          "url": "/login-page",
+          "type": "href",
+          "context": "                        <strong>Authentication Failed:</strong> ${error.message}<br>\r\n                        <p>Please <a href=\"/login-page\">log in</a> and try again.</p>\r\n                        <p>If you continue to have issues, try refreshing the page.</p>\r",
+          "line": 451
+        },
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "                    setTimeout(() => {\r\n                        window.location.href = '/dashboard';\r\n                    }, 1500); // 1.5 second delay to show the success message\r",
+          "line": 741
+        },
+        {
+          "url": "/dashboard",
+          "type": "href",
+          "context": "                    setTimeout(() => {\r\n                        window.location.href = '/dashboard';\r\n                    }, 1500); // 1.5 second delay to show the success message\r",
+          "line": 741
+        }
+      ],
+      "size": 37514,
+      "lastModified": "2025-06-18T07:14:00.033Z"
+    }
+  ]
+}

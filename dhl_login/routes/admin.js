@@ -34,6 +34,119 @@ router.get('/', ensureAuthenticated, ensureAdmin, (req, res) => {
   res.render('admin/dashboard', { title: 'Admin Dashboard', user: req.user });
 });
 
+// System Reports Dashboard
+router.get('/reports', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  console.log('[Admin Reports] User accessing reports dashboard:', req.user ? req.user.username : 'No user');
+
+  try {
+    console.log('[Admin Reports] Starting to fetch statistics...');
+
+    // Get basic statistics for the reports dashboard
+    console.log('[Admin Reports] Fetching submissions count...');
+    const submissionsCount = await pgPool.query('SELECT COUNT(*) as count FROM "ChecklistSubmissions"');
+    console.log('[Admin Reports] Submissions count:', submissionsCount.rows[0]);
+
+    console.log('[Admin Reports] Fetching validations count...');
+    const validationsCount = await pgPool.query('SELECT COUNT(*) as count FROM "SupervisorValidationsLog"');
+    console.log('[Admin Reports] Validations count:', validationsCount.rows[0]);
+
+    console.log('[Admin Reports] Fetching users count...');
+    const usersCount = await User.count(); // Use Sequelize to count users from SQLite
+    console.log('[Admin Reports] Users count:', usersCount);
+
+    console.log('[Admin Reports] Fetching audit count...');
+    const auditCount = await pgPool.query('SELECT COUNT(*) as count FROM "AuditTrail"');
+    console.log('[Admin Reports] Audit count:', auditCount.rows[0]);
+
+    // Get recent activity summary
+    console.log('[Admin Reports] Fetching recent activity...');
+    const recentActivity = await pgPool.query(`
+      SELECT
+        DATE_TRUNC('day', "submission_timestamp") as date,
+        COUNT(*) as submissions_count
+      FROM "ChecklistSubmissions"
+      WHERE "submission_timestamp" >= NOW() - INTERVAL '30 days'
+      GROUP BY DATE_TRUNC('day', "submission_timestamp")
+      ORDER BY date DESC
+      LIMIT 30
+    `);
+    console.log('[Admin Reports] Recent activity rows:', recentActivity.rows.length);
+
+    // Get compliance overview
+    console.log('[Admin Reports] Fetching compliance overview...');
+    const complianceOverview = await pgPool.query(`
+      SELECT
+        COUNT(*) as total_submissions,
+        COUNT(CASE WHEN svl."validation_timestamp" IS NOT NULL THEN 1 END) as validated_submissions,
+        COUNT(CASE WHEN cs."status" = 'PendingSupervisorValidation' THEN 1 END) as pending_validation
+      FROM "ChecklistSubmissions" cs
+      LEFT JOIN "SupervisorValidationsLog" svl ON cs."submission_id" = svl."submission_id"
+      WHERE cs."submission_timestamp" >= NOW() - INTERVAL '30 days'
+    `);
+    console.log('[Admin Reports] Compliance overview:', complianceOverview.rows[0]);
+
+    console.log('[Admin Reports] Preparing render data...');
+    const renderData = {
+      title: 'System Reports Dashboard',
+      user: req.user,
+      stats: {
+        submissions: submissionsCount.rows[0].count,
+        validations: validationsCount.rows[0].count,
+        users: usersCount, // Direct count from Sequelize
+        audit: auditCount.rows[0].count
+      },
+      recentActivity: recentActivity.rows,
+      complianceOverview: complianceOverview.rows[0] || {}
+    };
+
+    console.log('[Admin Reports] Render data prepared:', {
+      title: renderData.title,
+      statsCount: Object.keys(renderData.stats).length,
+      recentActivityCount: renderData.recentActivity.length,
+      hasComplianceOverview: !!renderData.complianceOverview
+    });
+
+    console.log('[Admin Reports] Rendering admin/reports view...');
+    res.render('admin/reports', renderData);
+    console.log('[Admin Reports] View rendered successfully!');
+  } catch (error) {
+    console.error('[Admin Reports] Error:', error);
+    req.flash('error', 'Failed to load reports dashboard data.');
+    res.redirect('/admin');
+  }
+});
+
+// System Logs Dashboard
+router.get('/logs', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  console.log('[Admin Logs] User accessing logs dashboard:', req.user ? req.user.username : 'No user');
+
+  try {
+    // Get recent audit trail entries
+    const recentLogs = await pgPool.query(`
+      SELECT
+        "timestamp",
+        "action_type",
+        "user_id",
+        "details"
+      FROM "AuditTrail"
+      ORDER BY "timestamp" DESC
+      LIMIT 50
+    `);
+
+    const renderData = {
+      title: 'System Logs',
+      user: req.user,
+      logs: recentLogs.rows
+    };
+
+    res.render('admin/logs', renderData);
+  } catch (error) {
+    console.error('[Admin Logs] Error:', error);
+    req.flash('error', 'Failed to load system logs.');
+    res.redirect('/admin');
+  }
+});
+
 // GET route to display the new user creation form
 router.get('/users/new', ensureAuthenticated, ensureAdmin, lusca.csrf(), (req, res) => {
   console.log('[Admin Create User] Route accessed by user:', req.user ? req.user.username : 'No user');

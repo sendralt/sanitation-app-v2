@@ -27,7 +27,7 @@ const {
 
 // Import security middleware
 const { securityHeaders, additionalSecurity } = require('./middleware/security');
-const { generalLimiter, authLimiter, apiLimiter } = require('./middleware/rateLimiting');
+const { generalLimiter, authLimiter, apiLimiter, authenticatedApiLimiter } = require('./middleware/rateLimiting');
 
 require('./config/passport')(passport);           // ➜ configure strategy
 
@@ -35,7 +35,7 @@ const app = express();
 
 // --- CORS Configuration for API endpoints
 // Parse allowed origins from environment variable
-const allowedOriginsString = process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3001,http://localhost:3000';
+const allowedOriginsString = process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3001,http://localhost:3000,https://localhost:3443';
 const allowedOrigins = allowedOriginsString.split(',').map(origin => origin.trim());
 
 // Configure CORS options for API routes
@@ -85,14 +85,14 @@ const isSSLEnabled = process.env.ENABLE_SSL === 'true';
 // This allows for production deployments behind reverse proxies that handle SSL termination
 const useSecureCookies = isSSLEnabled;
 app.use(session({
-  secret            : 'wRVPT1tLZK0kYAvSxVbg5n3hCmN9u82jpxODq6YeblJMHvUGzaE7cWiX4Ftk5oQm',
+  secret            : process.env.SESSION_SECRET || 'wRVPT1tLZK0kYAvSxVbg5n3hCmN9u82jpxODq6YeblJMHvUGzaE7cWiX4Ftk5oQm',
   resave            : false,
   saveUninitialized : false,
   cookie            : {
-    maxAge: 1000 * 60 * 60, // 1h
-    sameSite: 'Lax', // Explicitly set SameSite policy
+    maxAge: parseInt(process.env.SESSION_MAX_AGE) || 1000 * 60 * 60, // 1h default
+    sameSite: process.env.SESSION_SAME_SITE || 'Lax', // Explicitly set SameSite policy
     secure: useSecureCookies, // Only secure if SSL is explicitly enabled
-    httpOnly: true // Prevent XSS attacks
+    httpOnly: process.env.SESSION_HTTP_ONLY !== 'false' // Prevent XSS attacks, default true
   }
 }));
 
@@ -276,17 +276,18 @@ app.get('/forgot-password', lusca.csrf(), (req, res) => {
 app.get('/api/config', (req, res) => {
   console.log('[DEBUG] SUPERVISOR_EMAIL env var:', process.env.SUPERVISOR_EMAIL);
   const config = {
-    backendApiUrl: 'http://localhost:3001',
+    backendApiUrl: process.env.BACKEND_API_URL || 'http://localhost:3001',
     supervisorEmail: process.env.SUPERVISOR_EMAIL || 'sendral.ts.1@pg.com',
     environment: process.env.NODE_ENV || 'development',
-    version: require('./package.json').version
+    version: require('./package.json').version,
+    baseUrl: process.env.BASE_URL || 'http://localhost:3000'
   };
   console.log('[DEBUG] Config object:', config);
   res.json(config);
 });
 
 // --- API Routes ---
-app.use('/api/auth', require('./routes/auth')); // Mount API auth routes
+app.use('/api/auth', authenticatedApiLimiter, require('./routes/auth')); // Mount API auth routes with lenient rate limiting
 
 // --- Admin Routes ---
 app.use('/admin', (req, res, next) => {

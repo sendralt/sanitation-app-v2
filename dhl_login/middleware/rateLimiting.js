@@ -8,24 +8,36 @@ const rateLimit = require('express-rate-limit');
 
 /**
  * General web page rate limiting
+ * More lenient limits for development and normal usage
  */
 const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200, // Higher limit for web pages
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    max: process.env.DISABLE_RATE_LIMITING === 'true' ? 999999 :
+         (process.env.NODE_ENV === 'development' ? 1000 :
+          parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 200),
     message: {
         error: 'Too many requests from this IP, please try again later.',
         retryAfter: '15 minutes'
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Skip rate limiting for certain paths that should be unrestricted
+    skip: (req) => {
+        // Skip rate limiting for health checks and static assets
+        const skipPaths = ['/health', '/favicon.ico', '/css/', '/js/', '/images/'];
+        return skipPaths.some(path => req.path.startsWith(path));
+    }
 });
 
 /**
- * Strict rate limiting for authentication endpoints
+ * Rate limiting for authentication endpoints
+ * More reasonable limits while maintaining security
  */
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 login attempts per windowMs
+    max: process.env.DISABLE_RATE_LIMITING === 'true' ? 999999 :
+         (process.env.NODE_ENV === 'development' ? 50 :
+          parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS) || 10),
     message: {
         error: 'Too many authentication attempts, please try again later.',
         retryAfter: '15 minutes'
@@ -62,9 +74,23 @@ const registrationLimiter = rateLimit({
  */
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 API requests per windowMs
+    max: process.env.NODE_ENV === 'development' ? 2000 :
+         parseInt(process.env.API_RATE_LIMIT_MAX_REQUESTS) || 100,
     message: {
         error: 'Too many API requests, please slow down.',
+        retryAfter: '15 minutes'
+    },
+});
+
+/**
+ * More lenient rate limiting for authenticated API endpoints
+ */
+const authenticatedApiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: process.env.NODE_ENV === 'development' ? 5000 :
+         parseInt(process.env.AUTHENTICATED_API_RATE_LIMIT_MAX_REQUESTS) || 500,
+    message: {
+        error: 'Too many authenticated API requests, please slow down.',
         retryAfter: '15 minutes'
     },
 });
@@ -74,5 +100,6 @@ module.exports = {
     authLimiter,
     passwordResetLimiter,
     registrationLimiter,
-    apiLimiter
+    apiLimiter,
+    authenticatedApiLimiter
 };

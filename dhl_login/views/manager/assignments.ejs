@@ -302,8 +302,8 @@ async function ensureAuthentication() {
     const token = getJWTToken();
     if (!token) {
         try {
-            const response = await fetch('/api/auth/token', {
-                method: 'POST',
+            const response = await fetch('/api/auth/issue-jwt-for-session', {
+                method: 'GET',
                 credentials: 'include'
             });
 

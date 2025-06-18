@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Function to ensure user is authenticated and get JWT token
 async function ensureAuthentication() {
     try {
-        const response = await fetch('/api/auth/token', {
+        const response = await fetch('/api/auth/issue-jwt-for-session', {
             method: 'GET',
             credentials: 'include'
         });

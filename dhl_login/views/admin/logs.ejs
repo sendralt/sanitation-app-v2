@@ -1,0 +1,229 @@
+<style>
+.logs-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.dashboard-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 300;
+}
+
+.dashboard-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #3498db;
+  text-decoration: none;
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  color: #2980b9;
+}
+
+.logs-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #e1e8ed;
+  overflow: hidden;
+}
+
+.logs-header {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e8ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logs-title {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #2c3e50;
+}
+
+.logs-count {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.logs-table th {
+  background: #f8f9fa;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 1px solid #e1e8ed;
+}
+
+.logs-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f3f4;
+  vertical-align: top;
+}
+
+.logs-table tr:hover {
+  background: #f8f9fa;
+}
+
+.log-timestamp {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  white-space: nowrap;
+}
+
+.log-action {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.log-user {
+  color: #3498db;
+  font-weight: 500;
+}
+
+.log-details {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  max-width: 300px;
+  word-wrap: break-word;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #7f8c8d;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.refresh-btn {
+  padding: 0.5rem 1rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.refresh-btn:hover {
+  background: #2980b9;
+}
+</style>
+
+<div class="logs-dashboard">
+  <a href="/admin" class="back-link">
+    <i class="fas fa-arrow-left"></i>
+    Back to Admin Dashboard
+  </a>
+
+  <div class="dashboard-header">
+    <h1>📝 System Logs</h1>
+    <p>Monitor system activity and audit trail events</p>
+  </div>
+
+  <div class="logs-container">
+    <div class="logs-header">
+      <h3 class="logs-title">Recent Audit Trail Events</h3>
+      <div>
+        <span class="logs-count">Showing last 50 entries</span>
+        <button class="refresh-btn" onclick="window.location.reload()">
+          <i class="fas fa-sync-alt"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <% if (logs && logs.length > 0) { %>
+      <table class="logs-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Action</th>
+            <th>User ID</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(function(log) { %>
+            <tr>
+              <td class="log-timestamp">
+                <%= new Date(log.timestamp).toLocaleString() %>
+              </td>
+              <td class="log-action">
+                <%= log.action_type %>
+              </td>
+              <td class="log-user">
+                <%= log.user_id || 'System' %>
+              </td>
+              <td class="log-details">
+                <% if (log.details && typeof log.details === 'object') { %>
+                  <% Object.keys(log.details).slice(0, 3).forEach(function(key) { %>
+                    <strong><%= key %>:</strong> <%= log.details[key] %><br>
+                  <% }); %>
+                  <% if (Object.keys(log.details).length > 3) { %>
+                    <em>... and <%= Object.keys(log.details).length - 3 %> more</em>
+                  <% } %>
+                <% } else if (log.details) { %>
+                  <%= log.details %>
+                <% } else { %>
+                  <em>No details</em>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="fas fa-file-alt"></i>
+        <h3>No Log Entries Found</h3>
+        <p>No audit trail events have been recorded yet.</p>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+// Auto-refresh every 30 seconds
+setTimeout(function() {
+  window.location.reload();
+}, 30000);
+</script>

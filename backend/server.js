@@ -5,6 +5,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
+const jwt = require('jsonwebtoken'); // Add JWT module for token verification
 const rateLimit = require('express-rate-limit'); // Import express-rate-limit
 
 const cors = require('cors');
@@ -88,13 +89,19 @@ const corsOptions = {
 app.use(cors(corsOptions));
 console.log(`CORS configured with allowed origins: ${allowedOrigins.join(', ')}`);
 
-// Define the rate limiter
+// Define the rate limiter with more reasonable limits
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `windowMs`
+  max: process.env.DISABLE_RATE_LIMITING === 'true' ? 999999 :
+       (process.env.NODE_ENV === 'development' ? 2000 : 500), // Much higher limits for development
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: { message: 'Too many requests from this IP, please try again after 15 minutes.' },
+  // Skip rate limiting for health checks and certain endpoints
+  skip: (req) => {
+    const skipPaths = ['/health', '/ready', '/live'];
+    return skipPaths.some(path => req.path.startsWith(path));
+  }
 });
 
 // Serve static files
@@ -886,7 +893,7 @@ app.patch('/api/assignments/:assignmentId/status', apiLimiter, authenticateApi, 
 
         res.json({
             success: true,
-            assignment: result.rows[0]
+            message: 'Assignment status updated successfully'
         });
     } catch (error) {
         console.error('[API] Error updating assignment status:', error);
@@ -896,6 +903,7 @@ app.patch('/api/assignments/:assignmentId/status', apiLimiter, authenticateApi, 
         });
     }
 }));
+
 
 // Team Management API Endpoints for Phase 3
 

@@ -14,14 +14,29 @@ const securityHeaders = helmet({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for EJS templates
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com"], // Allow jQuery CDN
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'", // Allow inline scripts for dashboard functionality
+                "https://code.jquery.com",
+                "https://cdnjs.cloudflare.com", // Allow common CDN for additional libraries
+                "https://cdn.jsdelivr.net" // Allow jsDelivr CDN
+            ],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "http://localhost:3001", "https://localhost:3001", "https://dot1hundred.com"],
-            fontSrc: ["'self'"],
+            connectSrc: [
+                "'self'",
+                "http://localhost:3001",
+                "https://localhost:3001",
+                "http://localhost:3000", // Allow frontend to backend communication
+                "https://localhost:3000",
+                "https://dot1hundred.com"
+            ],
+            fontSrc: ["'self'", "https:", "data:"], // Allow web fonts
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             frameSrc: ["'none'"],
             formAction: ["'self'"], // Only allow forms to submit to same origin
+            baseUri: ["'self'"], // Restrict base URI
+            upgradeInsecureRequests: [], // Upgrade HTTP to HTTPS when possible
         },
     },
     crossOriginEmbedderPolicy: false, // Disable for compatibility

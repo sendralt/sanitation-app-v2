@@ -1,0 +1,393 @@
+<style>
+.reports-dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.dashboard-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 300;
+}
+
+.dashboard-header p {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  text-align: center;
+  border: 1px solid #e1e8ed;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 1rem;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.report-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #e1e8ed;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.report-header {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e8ed;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.report-icon {
+  font-size: 2rem;
+}
+
+.report-title {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #2c3e50;
+}
+
+.report-content {
+  padding: 1.5rem;
+}
+
+.report-description {
+  color: #7f8c8d;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.report-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #7f8c8d;
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #229954;
+  transform: translateY(-1px);
+}
+
+.compliance-overview {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #e1e8ed;
+  margin-bottom: 2rem;
+}
+
+.compliance-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.compliance-stat {
+  text-align: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.compliance-stat-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.compliance-stat-label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #3498db;
+  text-decoration: none;
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  color: #2980b9;
+}
+</style>
+
+<div class="reports-dashboard">
+  <a href="/admin" class="back-link">
+    <i class="fas fa-arrow-left"></i>
+    Back to Admin Dashboard
+  </a>
+
+  <div class="dashboard-header">
+    <h1>📊 System Reports Dashboard</h1>
+    <p>Comprehensive reporting and analytics for the sanitation checklist system</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number"><%= stats.submissions %></div>
+      <div class="stat-label">Total Submissions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><%= stats.validations %></div>
+      <div class="stat-label">Supervisor Validations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><%= stats.users %></div>
+      <div class="stat-label">System Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><%= stats.audit %></div>
+      <div class="stat-label">Audit Trail Entries</div>
+    </div>
+  </div>
+
+  <div class="compliance-overview">
+    <h2>📈 Compliance Overview (Last 30 Days)</h2>
+    <div class="compliance-stats">
+      <div class="compliance-stat">
+        <div class="compliance-stat-number"><%= complianceOverview.total_submissions || 0 %></div>
+        <div class="compliance-stat-label">Total Submissions</div>
+      </div>
+      <div class="compliance-stat">
+        <div class="compliance-stat-number"><%= complianceOverview.validated_submissions || 0 %></div>
+        <div class="compliance-stat-label">Validated</div>
+      </div>
+      <div class="compliance-stat">
+        <div class="compliance-stat-number"><%= complianceOverview.pending_validation || 0 %></div>
+        <div class="compliance-stat-label">Pending Validation</div>
+      </div>
+      <div class="compliance-stat">
+        <div class="compliance-stat-number">
+          <%= complianceOverview.total_submissions > 0 ? 
+              Math.round((complianceOverview.validated_submissions / complianceOverview.total_submissions) * 100) : 0 %>%
+        </div>
+        <div class="compliance-stat-label">Validation Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reports-grid">
+    <div class="report-card">
+      <div class="report-header">
+        <div class="report-icon">📋</div>
+        <h3 class="report-title">Submission Reports</h3>
+      </div>
+      <div class="report-content">
+        <p class="report-description">
+          View detailed reports on checklist submissions, completion rates, and user activity patterns.
+        </p>
+        <div class="report-actions">
+          <a href="/admin/postgresql/submissions" class="btn btn-primary">
+            <i class="fas fa-list"></i> View Submissions
+          </a>
+          <a href="/admin/postgresql" class="btn btn-secondary">
+            <i class="fas fa-database"></i> Database View
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-card">
+      <div class="report-header">
+        <div class="report-icon">✅</div>
+        <h3 class="report-title">Validation Reports</h3>
+      </div>
+      <div class="report-content">
+        <p class="report-description">
+          Monitor supervisor validation activities, response times, and validation quality metrics.
+        </p>
+        <div class="report-actions">
+          <a href="#" class="btn btn-primary" onclick="alert('Validation reports coming soon!')">
+            <i class="fas fa-check-circle"></i> View Validations
+          </a>
+          <a href="/admin/logs" class="btn btn-secondary">
+            <i class="fas fa-history"></i> Audit Logs
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-card">
+      <div class="report-header">
+        <div class="report-icon">👥</div>
+        <h3 class="report-title">User Activity Reports</h3>
+      </div>
+      <div class="report-content">
+        <p class="report-description">
+          Analyze user engagement, productivity metrics, and system usage patterns across teams.
+        </p>
+        <div class="report-actions">
+          <a href="/admin/users/new" class="btn btn-primary">
+            <i class="fas fa-users"></i> Manage Users
+          </a>
+          <a href="#" class="btn btn-secondary" onclick="alert('User analytics coming soon!')">
+            <i class="fas fa-chart-line"></i> Analytics
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-card">
+      <div class="report-header">
+        <div class="report-icon">🔧</div>
+        <h3 class="report-title">Automation Reports</h3>
+      </div>
+      <div class="report-content">
+        <p class="report-description">
+          Monitor automation rule performance, assignment generation, and system efficiency metrics.
+        </p>
+        <div class="report-actions">
+          <a href="/admin/automation-rules" class="btn btn-primary">
+            <i class="fas fa-cogs"></i> View Rules
+          </a>
+          <a href="/admin/automation-rules/new" class="btn btn-success">
+            <i class="fas fa-plus"></i> Create Rule
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-card">
+      <div class="report-header">
+        <div class="report-icon">🛡️</div>
+        <h3 class="report-title">Compliance Reports</h3>
+      </div>
+      <div class="report-content">
+        <p class="report-description">
+          Generate compliance reports, track regulatory adherence, and identify non-compliance issues.
+        </p>
+        <div class="report-actions">
+          <a href="#" class="btn btn-primary" onclick="alert('Compliance reports require backend API integration!')">
+            <i class="fas fa-shield-alt"></i> Compliance Dashboard
+          </a>
+          <a href="#" class="btn btn-secondary" onclick="alert('Export functionality coming soon!')">
+            <i class="fas fa-download"></i> Export Reports
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-card">
+      <div class="report-header">
+        <div class="report-icon">📊</div>
+        <h3 class="report-title">System Analytics</h3>
+      </div>
+      <div class="report-content">
+        <p class="report-description">
+          Advanced analytics including performance metrics, trend analysis, and predictive insights.
+        </p>
+        <div class="report-actions">
+          <a href="#" class="btn btn-primary" onclick="alert('Advanced analytics coming soon!')">
+            <i class="fas fa-chart-bar"></i> View Analytics
+          </a>
+          <a href="#" class="btn btn-secondary" onclick="alert('Custom reports coming soon!')">
+            <i class="fas fa-file-export"></i> Custom Reports
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

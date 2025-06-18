@@ -252,7 +252,7 @@
         <a href="/app/index.html" class="btn btn-primary">
           <i class="fas fa-plus"></i> Start New Checklist
         </a>
-        <a href="#" onclick="refreshDashboard()" class="btn btn-secondary">
+        <a href="#" id="refresh-dashboard-btn" class="btn btn-secondary">
           <i class="fas fa-sync"></i> Refresh Dashboard
         </a>
         <a href="/forgot-password" class="btn btn-secondary">
@@ -353,43 +353,85 @@
 // Dashboard functionality
 let backendApiUrl = 'http://localhost:3001'; // Default backend URL
 
-// Load dashboard data on page load
 document.addEventListener('DOMContentLoaded', async function() {
-    // Ensure authentication before loading data
+    // Clear any existing tokens that might be invalid
+    localStorage.removeItem('jwtToken');
+    sessionStorage.removeItem('jwtToken');
+
+    console.log('Cleared existing tokens, requesting fresh authentication');
+
+    // Get a fresh token
     const authenticated = await ensureAuthentication();
     if (authenticated) {
+        // Load data with delays to prevent rate limiting
         loadUserStats();
-        loadActiveAssignments();
-        loadRecentSubmissions();
+        setTimeout(() => loadActiveAssignments(), 500);
+        setTimeout(() => loadRecentSubmissions(), 1000);
     } else {
         console.warn('User not authenticated for API calls');
-        // Optionally redirect to login or show a message
+        // Redirect to login page if authentication fails
+        window.location.href = '/login-page';
     }
 
-    // Add event listeners for dynamically created buttons
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.start-assignment-btn')) {
-            const assignmentId = e.target.closest('.start-assignment-btn').dataset.assignmentId;
-            startAssignment(assignmentId);
-        } else if (e.target.closest('.retry-assignments-btn')) {
-            loadActiveAssignments();
-        } else if (e.target.closest('.retry-submissions-btn')) {
-            loadRecentSubmissions();
-        }
-    });
-});
+    // Add event listener for refresh dashboard button
+    const refreshBtn = document.getElementById('refresh-dashboard-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            refreshDashboard();
+        });
+    }
+}); // Add this at the top of your script section, right after the backendApiUrl declaration
 
 // Get JWT token from localStorage or session
 function getJWTToken() {
-    return localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken');
+    const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken');
+    console.log('JWT Token found:', token ? 'Yes (length: ' + token.length + ')' : 'No');
+    return token;
+}
+
+// Add this function to decode and check the token
+function decodeJWT(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error('Error decoding JWT:', e);
+        return null;
+    }
+}
+
+// Check if token is expired
+function isTokenExpired(token) {
+    const decoded = decodeJWT(token);
+    if (!decoded || !decoded.exp) {
+        return true; // Consider invalid tokens as expired
+    }
+
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    const bufferTime = 60; // 60 seconds buffer before actual expiration
+
+    return decoded.exp <= (currentTime + bufferTime);
 }
 
 // Make authenticated API request
 async function makeAuthenticatedRequest(url, options = {}) {
-    const token = getJWTToken();
-    if (!token) {
-        console.error('No JWT token found');
-        return null;
+    let token = getJWTToken();
+
+    // Check if token exists and is not expired
+    if (!token || isTokenExpired(token)) {
+        console.log('[makeAuthenticatedRequest] Token missing or expired, getting fresh token...');
+        const authenticated = await ensureAuthentication();
+        if (!authenticated) {
+            console.error('Failed to get valid authentication token');
+            return null;
+        }
+        token = getJWTToken(); // Get the fresh token
     }
 
     console.log('[makeAuthenticatedRequest] Using token:', token.substring(0, 50) + '...');
@@ -412,13 +454,20 @@ async function makeAuthenticatedRequest(url, options = {}) {
         if (!response.ok) {
             if (response.status === 401) {
                 console.error('[makeAuthenticatedRequest] 401 Unauthorized - token may be expired or invalid');
-                // Try to get a fresh token
-                const newToken = await ensureAuthentication();
-                if (newToken) {
-                    console.log('[makeAuthenticatedRequest] Got fresh token, retrying request...');
-                    // Retry the request with the new token
-                    return makeAuthenticatedRequest(url, options);
+                // Try to get a fresh token (but only retry once to prevent loops)
+                if (!options._retryAttempted) {
+                    const newToken = await ensureAuthentication();
+                    if (newToken) {
+                        console.log('[makeAuthenticatedRequest] Got fresh token, retrying request...');
+                        // Mark this as a retry attempt to prevent infinite loops
+                        const retryOptions = { ...options, _retryAttempted: true };
+                        return makeAuthenticatedRequest(url, retryOptions);
+                    }
                 }
+            } else if (response.status === 429) {
+                console.error('[makeAuthenticatedRequest] 429 Rate Limited - too many requests');
+                // Don't retry on rate limit errors
+                return { success: false, error: 'Rate limited', status: 429 };
             }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -505,40 +554,59 @@ async function loadActiveAssignments() {
 // Load recent submissions
 async function loadRecentSubmissions() {
     const container = document.getElementById('submissionsContainer');
-    const data = await makeAuthenticatedRequest(`${backendApiUrl}/api/user/submissions?limit=5`);
-
-    if (data && data.success) {
-        if (data.submissions.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-file-alt"></i>
-                    <p>No submissions yet</p>
-                    <small>Your completed checklists will appear here.</small>
-                </div>
-            `;
-        } else {
-            container.innerHTML = data.submissions.map(submission => {
-                const submissionDate = new Date(submission.submission_timestamp);
-                const validationStatus = submission.validation_timestamp ? 'Validated' : 'Pending Validation';
-
-                return `
-                    <div class="assignment-item">
-                        <div class="assignment-title">${submission.checklist_title}</div>
-                        <div class="assignment-meta">
-                            <span>Submitted: ${submissionDate.toLocaleDateString()}</span>
-                            <span class="status-badge ${submission.validation_timestamp ? 'status-inprogress' : 'status-assigned'}">
-                                ${validationStatus}
-                            </span>
-                        </div>
+    console.log('Fetching submissions from:', `${backendApiUrl}/api/user/submissions?limit=5`);
+    
+    try {
+        const data = await makeAuthenticatedRequest(`${backendApiUrl}/api/user/submissions?limit=5`);
+        console.log('Submissions API response:', data);
+        
+        if (data && data.success) {
+            if (data.submissions.length === 0) {
+                console.log('No submissions found for user');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt"></i>
+                        <p>No submissions yet</p>
+                        <small>Your completed checklists will appear here.</small>
                     </div>
                 `;
-            }).join('');
+            } else {
+                console.log(`Found ${data.submissions.length} submissions`);
+                container.innerHTML = data.submissions.map(submission => {
+                    const submissionDate = new Date(submission.submission_timestamp);
+                    const validationStatus = submission.validation_timestamp ? 'Validated' : 'Pending Validation';
+
+                    return `
+                        <div class="assignment-item">
+                            <div class="assignment-title">${submission.checklist_title}</div>
+                            <div class="assignment-meta">
+                                <span>Submitted: ${submissionDate.toLocaleDateString()}</span>
+                                <span class="status-badge ${submission.validation_timestamp ? 'status-inprogress' : 'status-assigned'}">
+                                    ${validationStatus}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } else {
+            console.error('Failed to load submissions:', data);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Failed to load submissions</p>
+                    <button class="btn btn-secondary btn-sm retry-submissions-btn">
+                        <i class="fas fa-retry"></i> Retry
+                    </button>
+                </div>
+            `;
         }
-    } else {
+    } catch (error) {
+        console.error('Error in loadRecentSubmissions:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-exclamation-triangle"></i>
-                <p>Failed to load submissions</p>
+                <p>Error: ${error.message}</p>
                 <button class="btn btn-secondary btn-sm retry-submissions-btn">
                     <i class="fas fa-retry"></i> Retry
                 </button>
@@ -566,8 +634,8 @@ async function startAssignment(assignmentId) {
 // Refresh dashboard data
 function refreshDashboard() {
     loadUserStats();
-    loadActiveAssignments();
-    loadRecentSubmissions();
+    setTimeout(() => loadActiveAssignments(), 500);
+    setTimeout(() => loadRecentSubmissions(), 1000);
 }
 
 // Check if user has JWT token, if not, try to get one
@@ -575,12 +643,37 @@ async function ensureAuthentication() {
     const token = getJWTToken();
     console.log('[ensureAuthentication] Current token:', token ? 'exists' : 'not found');
 
+    if (token) {
+        // Check if token is expired
+        if (isTokenExpired(token)) {
+            console.log('[ensureAuthentication] Token is expired, clearing it');
+            localStorage.removeItem('jwtToken');
+            sessionStorage.removeItem('jwtToken');
+            // Continue to get a new token
+        } else {
+            // Decode and check the token
+            const decoded = decodeJWT(token);
+            console.log('[ensureAuthentication] Decoded token:', decoded);
+
+            // Check if token has required fields
+            if (!decoded || !decoded.userId) {
+                console.error('[ensureAuthentication] Token missing required fields, clearing it');
+                localStorage.removeItem('jwtToken');
+                sessionStorage.removeItem('jwtToken');
+                // Continue to get a new token
+            } else {
+                console.log('[ensureAuthentication] Using existing valid token');
+                return true;
+            }
+        }
+    }
+    
     if (!token) {
         console.log('[ensureAuthentication] No token found, requesting new one...');
         // Try to get a new token using session authentication
         try {
-            const response = await fetch('/api/auth/token', {
-                method: 'POST',
+            const response = await fetch('/api/auth/issue-jwt-for-session', {
+                method: 'GET',
                 credentials: 'include'
             });
 
