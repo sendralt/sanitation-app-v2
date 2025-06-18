@@ -2242,6 +2242,315 @@ app.get('/api/user/stats', apiLimiter, authenticateApi, asyncHandler(async (req,
     }
 }));
 
+// Compliance Officer API Endpoints for Phase 4
+
+// Get compliance overview statistics
+app.get('/api/compliance/overview', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+
+    if (!['compliance', 'manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Compliance officer privileges required'
+        });
+    }
+
+    // Log compliance dashboard access
+    await AuditLogger.logDashboardAccess(userId, 'compliance', {
+        endpoint: '/api/compliance/overview',
+        userRole
+    });
+
+    try {
+        // Get overall compliance score (last 30 days)
+        const complianceScore = await db.query(`
+            SELECT
+                ROUND(AVG(CASE
+                    WHEN total_tasks > 0
+                    THEN (validated_ok_tasks::decimal / total_tasks) * 100
+                    ELSE 0
+                END), 1) as overall_score
+            FROM (
+                SELECT
+                    cs."submission_id",
+                    COUNT(st."task_id") as total_tasks,
+                    COUNT(CASE WHEN st."supervisor_validated_status" = true THEN 1 END) as validated_ok_tasks
+                FROM "ChecklistSubmissions" cs
+                JOIN "SubmissionHeadings" sh ON cs."submission_id" = sh."submission_id"
+                JOIN "SubmissionTasks" st ON sh."heading_id" = st."heading_id"
+                WHERE cs."submission_timestamp" >= NOW() - INTERVAL '30 days'
+                AND cs."status" = 'SupervisorValidated'
+                GROUP BY cs."submission_id"
+            ) submission_scores
+        `);
+
+        // Get validated submissions count (last 30 days)
+        const validatedSubmissions = await db.query(`
+            SELECT COUNT(*) as count
+            FROM "ChecklistSubmissions"
+            WHERE "status" = 'SupervisorValidated'
+            AND "submission_timestamp" >= NOW() - INTERVAL '30 days'
+        `);
+
+        // Get non-compliant tasks count
+        const nonCompliantTasks = await db.query(`
+            SELECT COUNT(*) as count
+            FROM "SubmissionTasks" st
+            JOIN "SubmissionHeadings" sh ON st."heading_id" = sh."heading_id"
+            JOIN "ChecklistSubmissions" cs ON sh."submission_id" = cs."submission_id"
+            WHERE st."supervisor_validated_status" = false
+            AND cs."submission_timestamp" >= NOW() - INTERVAL '30 days'
+        `);
+
+        // Get average validation time
+        const avgValidationTime = await db.query(`
+            SELECT
+                ROUND(AVG(EXTRACT(EPOCH FROM (svl."validation_timestamp" - cs."submission_timestamp"))/3600), 1) as avg_hours
+            FROM "SupervisorValidationsLog" svl
+            JOIN "ChecklistSubmissions" cs ON svl."submission_id" = cs."submission_id"
+            WHERE svl."validation_timestamp" >= NOW() - INTERVAL '30 days'
+        `);
+
+        // Get audit trail entries (last 7 days)
+        const auditEntries = await db.query(`
+            SELECT COUNT(*) as count
+            FROM "AuditTrail"
+            WHERE "timestamp" >= NOW() - INTERVAL '7 days'
+        `);
+
+        res.json({
+            success: true,
+            overallComplianceScore: complianceScore.rows[0]?.overall_score || 0,
+            validatedSubmissions: parseInt(validatedSubmissions.rows[0].count),
+            nonCompliantTasks: parseInt(nonCompliantTasks.rows[0].count),
+            avgValidationTime: avgValidationTime.rows[0]?.avg_hours || 0,
+            auditTrailEntries: parseInt(auditEntries.rows[0].count)
+        });
+    } catch (error) {
+        console.error('[API] Error fetching compliance overview:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch compliance overview'
+        });
+    }
+}));
+
+// Get detailed compliance metrics with filtering
+app.get('/api/compliance/metrics', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const days = parseInt(req.query.days) || 30;
+    const checklistType = req.query.checklistType;
+
+    if (!['compliance', 'manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Compliance officer privileges required'
+        });
+    }
+
+    // Log compliance metrics access
+    await AuditLogger.logAnalyticsAccess(userId, 'compliance_metrics', { days, checklistType });
+
+    try {
+        let whereClause = `WHERE cs."submission_timestamp" >= NOW() - INTERVAL '${days} days'`;
+        let params = [];
+
+        if (checklistType) {
+            whereClause += ` AND cs."original_checklist_filename" LIKE $1`;
+            params.push(`%${checklistType}%`);
+        }
+
+        const metrics = await db.query(`
+            SELECT * FROM "v_compliance_metrics"
+            ${whereClause.replace('cs.', '')}
+            ORDER BY "submission_date" DESC, "original_checklist_filename"
+        `, params);
+
+        res.json({
+            success: true,
+            metrics: metrics.rows,
+            period: `${days} days`,
+            checklistType: checklistType || 'all'
+        });
+    } catch (error) {
+        console.error('[API] Error fetching compliance metrics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch compliance metrics'
+        });
+    }
+}));
+
+// Get audit trail with filtering
+app.get('/api/compliance/audit-trail', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const days = parseInt(req.query.days) || 7;
+    const actionType = req.query.actionType;
+    const targetUserId = req.query.targetUserId;
+    const limit = parseInt(req.query.limit) || 100;
+
+    if (!['compliance', 'manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Compliance officer privileges required'
+        });
+    }
+
+    // Log audit trail access
+    await AuditLogger.logAuditAccess(userId, 'audit_trail_view', { days, actionType, targetUserId });
+
+    try {
+        let whereClause = `WHERE at."timestamp" >= NOW() - INTERVAL '${days} days'`;
+        let params = [limit];
+        let paramIndex = 2;
+
+        if (actionType) {
+            whereClause += ` AND at."action_type" = $${paramIndex}`;
+            params.push(actionType);
+            paramIndex++;
+        }
+
+        if (targetUserId) {
+            whereClause += ` AND at."user_id" = $${paramIndex}`;
+            params.push(targetUserId);
+            paramIndex++;
+        }
+
+        const auditTrail = await db.query(`
+            SELECT
+                at."log_id",
+                at."timestamp",
+                at."user_id",
+                at."action_type",
+                at."details",
+                at."submission_id",
+                cs."checklist_title",
+                cs."original_checklist_filename"
+            FROM "AuditTrail" at
+            LEFT JOIN "ChecklistSubmissions" cs ON at."submission_id" = cs."submission_id"
+            ${whereClause}
+            ORDER BY at."timestamp" DESC
+            LIMIT $1
+        `, params);
+
+        res.json({
+            success: true,
+            auditTrail: auditTrail.rows,
+            period: `${days} days`,
+            filters: {
+                actionType: actionType || 'all',
+                targetUserId: targetUserId || 'all'
+            }
+        });
+    } catch (error) {
+        console.error('[API] Error fetching audit trail:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch audit trail'
+        });
+    }
+}));
+
+// Get non-compliance reports with drill-down capability
+app.get('/api/compliance/non-compliance', apiLimiter, authenticateApi, asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    const userRole = req.user.role || (req.user.isAdmin ? 'admin' : 'user');
+    const days = parseInt(req.query.days) || 30;
+    const severity = req.query.severity; // 'high', 'medium', 'low'
+    const checklistType = req.query.checklistType;
+
+    if (!['compliance', 'manager', 'admin'].includes(userRole)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Compliance officer privileges required'
+        });
+    }
+
+    // Log non-compliance report access
+    await AuditLogger.logAnalyticsAccess(userId, 'non_compliance_report', { days, severity, checklistType });
+
+    try {
+        let whereClause = `WHERE cs."submission_timestamp" >= NOW() - INTERVAL '${days} days'
+                          AND st."supervisor_validated_status" = false`;
+        let params = [];
+        let paramIndex = 1;
+
+        if (checklistType) {
+            whereClause += ` AND cs."original_checklist_filename" LIKE $${paramIndex}`;
+            params.push(`%${checklistType}%`);
+            paramIndex++;
+        }
+
+        // Get non-compliant tasks with details
+        const nonCompliantTasks = await db.query(`
+            SELECT
+                cs."submission_id",
+                cs."checklist_title",
+                cs."original_checklist_filename",
+                cs."submission_timestamp",
+                cs."submitted_by_user_id",
+                sh."heading_text",
+                st."task_label",
+                st."task_identifier_in_json",
+                st."comments",
+                svl."supervisor_name",
+                svl."validation_timestamp",
+                -- Calculate severity based on task frequency and impact
+                CASE
+                    WHEN COUNT(*) OVER (PARTITION BY st."task_identifier_in_json") > 5 THEN 'high'
+                    WHEN COUNT(*) OVER (PARTITION BY st."task_identifier_in_json") > 2 THEN 'medium'
+                    ELSE 'low'
+                END as severity
+            FROM "ChecklistSubmissions" cs
+            JOIN "SubmissionHeadings" sh ON cs."submission_id" = sh."submission_id"
+            JOIN "SubmissionTasks" st ON sh."heading_id" = st."heading_id"
+            LEFT JOIN "SupervisorValidationsLog" svl ON cs."submission_id" = svl."submission_id"
+            ${whereClause}
+            ORDER BY cs."submission_timestamp" DESC, severity DESC
+            LIMIT 200
+        `, params);
+
+        // Get summary statistics
+        const summary = await db.query(`
+            SELECT
+                COUNT(*) as total_non_compliant_tasks,
+                COUNT(DISTINCT cs."submission_id") as affected_submissions,
+                COUNT(DISTINCT cs."submitted_by_user_id") as affected_users,
+                COUNT(DISTINCT cs."original_checklist_filename") as affected_checklist_types
+            FROM "ChecklistSubmissions" cs
+            JOIN "SubmissionHeadings" sh ON cs."submission_id" = sh."submission_id"
+            JOIN "SubmissionTasks" st ON sh."heading_id" = st."heading_id"
+            ${whereClause}
+        `, params);
+
+        // Filter by severity if requested
+        let filteredTasks = nonCompliantTasks.rows;
+        if (severity) {
+            filteredTasks = filteredTasks.filter(task => task.severity === severity);
+        }
+
+        res.json({
+            success: true,
+            nonCompliantTasks: filteredTasks,
+            summary: summary.rows[0],
+            period: `${days} days`,
+            filters: {
+                severity: severity || 'all',
+                checklistType: checklistType || 'all'
+            }
+        });
+    } catch (error) {
+        console.error('[API] Error fetching non-compliance report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch non-compliance report'
+        });
+    }
+}));
+
 // Health check routes
 app.use('/', require('./routes/health'));
 

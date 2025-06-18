@@ -63,7 +63,7 @@ User.init({
     allowNull: false,
   },
   role: {
-    type: DataTypes.ENUM('user', 'manager', 'admin'),
+    type: DataTypes.ENUM('user', 'manager', 'admin', 'compliance'),
     defaultValue: 'user',
     allowNull: false,
   },
@@ -107,6 +107,10 @@ User.prototype.isManager = function() {
   return this.role === 'manager' || this.role === 'admin';
 };
 
+User.prototype.isCompliance = function() {
+  return this.role === 'compliance' || this.role === 'manager' || this.role === 'admin';
+};
+
 User.prototype.canManageUser = function(targetUserId) {
   if (this.role === 'admin') return true;
   if (this.role === 'manager') {
@@ -129,6 +133,13 @@ User.findManagersWithTeams = function() {
       as: 'directReports',
       attributes: ['id', 'username', 'firstName', 'lastName', 'role']
     }]
+  });
+};
+
+User.findComplianceOfficers = function() {
+  return this.findAll({
+    where: { role: ['compliance', 'admin'] },
+    attributes: ['id', 'username', 'firstName', 'lastName', 'role', 'department']
   });
 };
 

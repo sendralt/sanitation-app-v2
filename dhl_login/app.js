@@ -306,6 +306,15 @@ app.use('/manager', (req, res, next) => {
   next();
 }, require('./routes/manager')); // Mount Manager routes
 
+// --- Compliance Routes ---
+app.use('/compliance', (req, res, next) => {
+  console.log(`[Compliance Route Middleware] ${req.method} ${req.originalUrl} - User authenticated: ${req.isAuthenticated ? req.isAuthenticated() : false}`);
+  if (req.user) {
+    console.log(`[Compliance Route Middleware] User: ${req.user.username}, role: ${req.user.role}`);
+  }
+  next();
+}, require('./routes/compliance')); // Mount Compliance routes
+
 // --- Other Protected Routes ---
 app.use('/checklists', require('./routes/checklist')); // protected
 

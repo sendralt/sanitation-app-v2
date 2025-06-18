@@ -275,6 +275,30 @@
       </div>
     </div>
 
+    <% if (user && (user.role === 'compliance' || user.role === 'manager' || user.role === 'admin' || user.isAdmin)) { %>
+    <!-- Compliance Panel -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <span class="card-icon">🛡️</span>
+        <h3 class="card-title">Compliance Panel</h3>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <a href="/compliance" class="btn btn-secondary">
+          <i class="fas fa-shield-alt"></i> Compliance Dashboard
+        </a>
+        <a href="/compliance/metrics" class="btn btn-secondary">
+          <i class="fas fa-chart-bar"></i> Compliance Metrics
+        </a>
+        <a href="/compliance/audit" class="btn btn-secondary">
+          <i class="fas fa-search"></i> Audit Trail
+        </a>
+        <a href="/compliance/non-compliance" class="btn btn-secondary">
+          <i class="fas fa-exclamation-triangle"></i> Non-Compliance Reports
+        </a>
+      </div>
+    </div>
+    <% } %>
+
     <% if (user && (user.role === 'manager' || user.role === 'admin' || user.isAdmin)) { %>
     <!-- Manager Panel -->
     <div class="dashboard-card">

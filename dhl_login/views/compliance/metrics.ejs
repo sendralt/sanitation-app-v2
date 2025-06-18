@@ -1,0 +1,524 @@
+<%- include('../layouts/main') %>
+
+<style>
+/* Compliance Metrics Specific Styles */
+.metrics-header {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+}
+
+.metrics-title {
+  font-size: 2.5rem;
+  font-weight: 300;
+  margin: 0;
+  text-align: center;
+}
+
+.metrics-subtitle {
+  text-align: center;
+  margin-top: 0.5rem;
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+.filters-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.filter-input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.btn-filter {
+  padding: 0.75rem 1.5rem;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-filter:hover {
+  background: #229954;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.metric-header {
+  background: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.metric-content {
+  padding: 1.5rem;
+}
+
+.metric-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.metric-table th,
+.metric-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.metric-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.metric-table tr:hover {
+  background: #f8f9fa;
+}
+
+.compliance-score {
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.score-excellent {
+  background: #d4edda;
+  color: #155724;
+}
+
+.score-good {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.score-warning {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.score-poor {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.error {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metrics-title {
+    font-size: 2rem;
+  }
+}
+</style>
+
+<div class="container">
+  <!-- Header -->
+  <div class="metrics-header">
+    <h1 class="metrics-title">📊 Compliance Metrics</h1>
+    <p class="metrics-subtitle">Detailed compliance analysis and quality trends</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label class="filter-label">Time Period</label>
+        <select id="daysFilter" class="filter-input">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="365">Last year</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Checklist Type</label>
+        <select id="checklistTypeFilter" class="filter-input">
+          <option value="">All Types</option>
+          <option value="Daily">Daily Checklists</option>
+          <option value="Weekly">Weekly Checklists</option>
+          <option value="Monthly">Monthly Checklists</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <button id="applyFilters" class="btn-filter">Apply Filters</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <!-- Overall Compliance Card -->
+    <div class="metric-card">
+      <div class="metric-header">Overall Compliance Summary</div>
+      <div class="metric-content" id="overallComplianceContent">
+        <div class="loading">Loading compliance data...</div>
+      </div>
+    </div>
+
+    <!-- Checklist Type Breakdown -->
+    <div class="metric-card">
+      <div class="metric-header">Compliance by Checklist Type</div>
+      <div class="metric-content" id="checklistTypeContent">
+        <div class="loading">Loading checklist data...</div>
+      </div>
+    </div>
+
+    <!-- Daily Trends -->
+    <div class="metric-card">
+      <div class="metric-header">Daily Compliance Trends</div>
+      <div class="metric-content" id="dailyTrendsContent">
+        <div class="loading">Loading trend data...</div>
+      </div>
+    </div>
+
+    <!-- Validation Performance -->
+    <div class="metric-card">
+      <div class="metric-header">Validation Performance</div>
+      <div class="metric-content" id="validationPerformanceContent">
+        <div class="loading">Loading validation data...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div style="margin-top: 2rem; text-align: center;">
+    <a href="/compliance" class="btn btn-secondary">← Back to Compliance Dashboard</a>
+    <a href="/compliance/audit" class="btn btn-primary">View Audit Trail →</a>
+  </div>
+</div>
+
+<script>
+// Compliance Metrics functionality
+let backendApiUrl = 'http://localhost:3001';
+
+// Load metrics on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    const authenticated = await ensureAuthentication();
+    if (authenticated) {
+        loadComplianceMetrics();
+    } else {
+        console.warn('User not authenticated for API calls');
+    }
+
+    // Set up filter event listeners
+    document.getElementById('applyFilters').addEventListener('click', loadComplianceMetrics);
+});
+
+// Function to ensure user is authenticated and get JWT token
+async function ensureAuthentication() {
+    try {
+        const response = await fetch('/api/auth/token', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.token) {
+                localStorage.setItem('jwtToken', data.token);
+                return true;
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('Authentication check failed:', error);
+        return false;
+    }
+}
+
+// Load compliance metrics with current filters
+async function loadComplianceMetrics() {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+        console.error('No JWT token available');
+        return;
+    }
+
+    const days = document.getElementById('daysFilter').value;
+    const checklistType = document.getElementById('checklistTypeFilter').value;
+
+    try {
+        const response = await fetch(`${backendApiUrl}/api/compliance/metrics?days=${days}&checklistType=${encodeURIComponent(checklistType)}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            displayComplianceMetrics(data.metrics);
+        } else {
+            console.error('Failed to load compliance metrics:', response.status);
+            showMetricsError();
+        }
+    } catch (error) {
+        console.error('Error loading compliance metrics:', error);
+        showMetricsError();
+    }
+}
+
+// Display compliance metrics
+function displayComplianceMetrics(metrics) {
+    displayOverallCompliance(metrics);
+    displayChecklistTypeBreakdown(metrics);
+    displayDailyTrends(metrics);
+    displayValidationPerformance(metrics);
+}
+
+// Display overall compliance summary
+function displayOverallCompliance(metrics) {
+    const container = document.getElementById('overallComplianceContent');
+    
+    if (metrics.length === 0) {
+        container.innerHTML = '<div class="no-data">No compliance data available for the selected period.</div>';
+        return;
+    }
+
+    const totalSubmissions = metrics.reduce((sum, m) => sum + parseInt(m.total_submissions || 0), 0);
+    const validatedSubmissions = metrics.reduce((sum, m) => sum + parseInt(m.validated_submissions || 0), 0);
+    const avgCompletion = metrics.reduce((sum, m) => sum + parseFloat(m.avg_completion_percentage || 0), 0) / metrics.length;
+    const avgValidationSuccess = metrics.reduce((sum, m) => sum + parseFloat(m.avg_validation_success_percentage || 0), 0) / metrics.length;
+
+    const complianceScore = avgValidationSuccess;
+    let scoreClass = 'score-poor';
+    if (complianceScore >= 90) scoreClass = 'score-excellent';
+    else if (complianceScore >= 75) scoreClass = 'score-good';
+    else if (complianceScore >= 60) scoreClass = 'score-warning';
+
+    container.innerHTML = `
+        <div class="compliance-score ${scoreClass}">
+            ${complianceScore.toFixed(1)}% Overall Compliance Score
+        </div>
+        <table class="metric-table" style="margin-top: 1rem;">
+            <tr>
+                <td><strong>Total Submissions:</strong></td>
+                <td>${totalSubmissions}</td>
+            </tr>
+            <tr>
+                <td><strong>Validated Submissions:</strong></td>
+                <td>${validatedSubmissions}</td>
+            </tr>
+            <tr>
+                <td><strong>Average Completion:</strong></td>
+                <td>${avgCompletion.toFixed(1)}%</td>
+            </tr>
+            <tr>
+                <td><strong>Validation Success Rate:</strong></td>
+                <td>${avgValidationSuccess.toFixed(1)}%</td>
+            </tr>
+        </table>
+    `;
+}
+
+// Display checklist type breakdown
+function displayChecklistTypeBreakdown(metrics) {
+    const container = document.getElementById('checklistTypeContent');
+    
+    if (metrics.length === 0) {
+        container.innerHTML = '<div class="no-data">No data available.</div>';
+        return;
+    }
+
+    // Group by checklist filename
+    const typeBreakdown = {};
+    metrics.forEach(metric => {
+        const filename = metric.original_checklist_filename;
+        if (!typeBreakdown[filename]) {
+            typeBreakdown[filename] = {
+                totalSubmissions: 0,
+                validatedSubmissions: 0,
+                avgCompletion: 0,
+                avgValidationSuccess: 0,
+                count: 0
+            };
+        }
+        
+        typeBreakdown[filename].totalSubmissions += parseInt(metric.total_submissions || 0);
+        typeBreakdown[filename].validatedSubmissions += parseInt(metric.validated_submissions || 0);
+        typeBreakdown[filename].avgCompletion += parseFloat(metric.avg_completion_percentage || 0);
+        typeBreakdown[filename].avgValidationSuccess += parseFloat(metric.avg_validation_success_percentage || 0);
+        typeBreakdown[filename].count++;
+    });
+
+    let tableHTML = `
+        <table class="metric-table">
+            <thead>
+                <tr>
+                    <th>Checklist Type</th>
+                    <th>Submissions</th>
+                    <th>Compliance %</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    Object.entries(typeBreakdown).forEach(([filename, data]) => {
+        const avgCompliance = data.count > 0 ? (data.avgValidationSuccess / data.count) : 0;
+        tableHTML += `
+            <tr>
+                <td>${filename.replace('.html', '').replace(/_/g, ' ')}</td>
+                <td>${data.totalSubmissions}</td>
+                <td>${avgCompliance.toFixed(1)}%</td>
+            </tr>
+        `;
+    });
+
+    tableHTML += '</tbody></table>';
+    container.innerHTML = tableHTML;
+}
+
+// Display daily trends
+function displayDailyTrends(metrics) {
+    const container = document.getElementById('dailyTrendsContent');
+    
+    if (metrics.length === 0) {
+        container.innerHTML = '<div class="no-data">No trend data available.</div>';
+        return;
+    }
+
+    // Sort by date and show recent trends
+    const sortedMetrics = metrics.sort((a, b) => new Date(b.submission_date) - new Date(a.submission_date));
+    const recentMetrics = sortedMetrics.slice(0, 10);
+
+    let tableHTML = `
+        <table class="metric-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Submissions</th>
+                    <th>Compliance %</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    recentMetrics.forEach(metric => {
+        const date = new Date(metric.submission_date).toLocaleDateString();
+        const compliance = parseFloat(metric.avg_validation_success_percentage || 0);
+        tableHTML += `
+            <tr>
+                <td>${date}</td>
+                <td>${metric.total_submissions}</td>
+                <td>${compliance.toFixed(1)}%</td>
+            </tr>
+        `;
+    });
+
+    tableHTML += '</tbody></table>';
+    container.innerHTML = tableHTML;
+}
+
+// Display validation performance
+function displayValidationPerformance(metrics) {
+    const container = document.getElementById('validationPerformanceContent');
+    
+    if (metrics.length === 0) {
+        container.innerHTML = '<div class="no-data">No validation data available.</div>';
+        return;
+    }
+
+    const totalValidations = metrics.reduce((sum, m) => sum + parseInt(m.supervisor_validations || 0), 0);
+    const avgTurnaround = metrics.reduce((sum, m) => sum + parseFloat(m.avg_validation_turnaround_hours || 0), 0) / metrics.length;
+    const avgSuccess = metrics.reduce((sum, m) => sum + parseFloat(m.avg_validation_success_percentage || 0), 0) / metrics.length;
+
+    container.innerHTML = `
+        <table class="metric-table">
+            <tr>
+                <td><strong>Total Validations:</strong></td>
+                <td>${totalValidations}</td>
+            </tr>
+            <tr>
+                <td><strong>Average Turnaround:</strong></td>
+                <td>${avgTurnaround.toFixed(1)} hours</td>
+            </tr>
+            <tr>
+                <td><strong>Success Rate:</strong></td>
+                <td>${avgSuccess.toFixed(1)}%</td>
+            </tr>
+        </table>
+    `;
+}
+
+// Show error state for metrics
+function showMetricsError() {
+    const containers = ['overallComplianceContent', 'checklistTypeContent', 'dailyTrendsContent', 'validationPerformanceContent'];
+    containers.forEach(containerId => {
+        document.getElementById(containerId).innerHTML = '<div class="error">Error loading metrics data</div>';
+    });
+}
+</script>

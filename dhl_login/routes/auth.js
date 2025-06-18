@@ -367,4 +367,173 @@ router.get('/me', authenticateJwt, (req, res) => {
     });
 });
 
+// Phase 4: Role Management API Endpoints for Advanced Automation
+
+// 10. Get users by role (for automation assignment logic)
+// This route will be mounted under /api/auth, so full path is /api/auth/users/by-role/:roleName
+router.get('/users/by-role/:roleName', authenticateJwt, asyncHandler(async (req, res) => {
+    const { roleName } = req.params;
+    const requestingUser = req.user;
+
+    // Only allow managers, admins, and compliance officers to access this endpoint
+    if (!['manager', 'admin', 'compliance'].includes(requestingUser.role)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Insufficient privileges to access user role data'
+        });
+    }
+
+    // Validate role name
+    const validRoles = ['user', 'manager', 'admin', 'compliance'];
+    if (!validRoles.includes(roleName)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid role name'
+        });
+    }
+
+    try {
+        const users = await User.findByRole(roleName);
+
+        // Return limited user information for security
+        const userList = users.map(user => ({
+            id: user.id,
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+            department: user.department
+        }));
+
+        res.json({
+            success: true,
+            role: roleName,
+            users: userList,
+            count: userList.length
+        });
+    } catch (error) {
+        console.error('[Auth Router /users/by-role] Error fetching users by role:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch users by role'
+        });
+    }
+}));
+
+// 11. Get user details by ID (for automation and dashboard features)
+// This route will be mounted under /api/auth, so full path is /api/auth/users/:userId/details
+router.get('/users/:userId/details', authenticateJwt, asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const requestingUser = req.user;
+
+    // Only allow managers, admins, and compliance officers to access this endpoint
+    if (!['manager', 'admin', 'compliance'].includes(requestingUser.role)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Insufficient privileges to access user details'
+        });
+    }
+
+    try {
+        const user = await User.findByPk(userId, {
+            attributes: ['id', 'username', 'firstName', 'lastName', 'role', 'department', 'managerId'],
+            include: [{
+                model: User,
+                as: 'manager',
+                attributes: ['id', 'username', 'firstName', 'lastName']
+            }]
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role,
+                department: user.department,
+                manager: user.manager ? {
+                    id: user.manager.id,
+                    username: user.manager.username,
+                    firstName: user.manager.firstName,
+                    lastName: user.manager.lastName
+                } : null
+            }
+        });
+    } catch (error) {
+        console.error('[Auth Router /users/:userId/details] Error fetching user details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch user details'
+        });
+    }
+}));
+
+// 12. Get all users with optional role filtering (for team management and assignment)
+// This route will be mounted under /api/auth, so full path is /api/auth/users
+router.get('/users', authenticateJwt, asyncHandler(async (req, res) => {
+    const requestingUser = req.user;
+    const { role, department, limit = 100 } = req.query;
+
+    // Only allow managers, admins, and compliance officers to access this endpoint
+    if (!['manager', 'admin', 'compliance'].includes(requestingUser.role)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Insufficient privileges to access user list'
+        });
+    }
+
+    try {
+        const whereClause = {};
+
+        // Apply role filter if provided
+        if (role) {
+            const validRoles = ['user', 'manager', 'admin', 'compliance'];
+            if (!validRoles.includes(role)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid role filter'
+                });
+            }
+            whereClause.role = role;
+        }
+
+        // Apply department filter if provided
+        if (department) {
+            whereClause.department = department;
+        }
+
+        const users = await User.findAll({
+            where: whereClause,
+            attributes: ['id', 'username', 'firstName', 'lastName', 'role', 'department'],
+            limit: parseInt(limit),
+            order: [['firstName', 'ASC'], ['lastName', 'ASC']]
+        });
+
+        res.json({
+            success: true,
+            users: users,
+            count: users.length,
+            filters: {
+                role: role || 'all',
+                department: department || 'all'
+            }
+        });
+    } catch (error) {
+        console.error('[Auth Router /users] Error fetching users:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch users'
+        });
+    }
+}));
+
 module.exports = router;

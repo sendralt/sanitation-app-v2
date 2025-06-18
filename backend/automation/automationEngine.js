@@ -7,6 +7,15 @@ const path = require('path');
 const cheerio = require('cheerio'); // For parsing HTML checklist files
 const AuditLogger = require('../utils/auditLogger');
 
+// For Node.js versions that don't have built-in fetch
+let fetch;
+try {
+    fetch = globalThis.fetch;
+} catch (e) {
+    // Fallback for older Node.js versions
+    fetch = require('node-fetch');
+}
+
 /**
  * Main Automation Engine class
  * Handles automated checklist assignments based on rules and triggers
@@ -176,10 +185,7 @@ class AutomationEngine {
                 return rule.assignment_logic_detail;
             
             case 'ROLE_BASED_ROUND_ROBIN':
-                // This would require integration with dhl_login to get users by role
-                // For now, fall back to same user
-                console.log('[Automation] ROLE_BASED_ROUND_ROBIN not yet implemented, falling back to SAME_USER');
-                return await this.getSameUser(triggeringSubmissionId);
+                return await this.getRoleBasedRoundRobinUser(rule);
             
             default:
                 console.error(`[Automation] Unknown assignment logic type: ${rule.assignment_logic_type}`);
@@ -372,6 +378,108 @@ class AutomationEngine {
         } catch (error) {
             console.error('[Automation] Error parsing checklist structure:', error);
             // Continue without structure - the assignment will still be created
+        }
+    }
+
+    /**
+     * Get next user for role-based round-robin assignment
+     */
+    async getRoleBasedRoundRobinUser(rule) {
+        const roleName = rule.assignment_logic_detail;
+        if (!roleName) {
+            console.error('[Automation] No role specified for ROLE_BASED_ROUND_ROBIN');
+            return null;
+        }
+
+        try {
+            // Get users with the specified role from dhl_login API
+            const dhlLoginApiUrl = process.env.DHL_LOGIN_API_URL || 'http://localhost:3000';
+            const response = await fetch(`${dhlLoginApiUrl}/api/auth/users/by-role/${roleName}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Note: In a production system, this would need proper service-to-service authentication
+                    // For now, we'll use a system token or internal API key
+                }
+            });
+
+            if (!response.ok) {
+                console.error(`[Automation] Failed to fetch users by role ${roleName}:`, response.status);
+                return null;
+            }
+
+            const data = await response.json();
+            const users = data.users || [];
+
+            if (users.length === 0) {
+                console.log(`[Automation] No users found with role ${roleName}`);
+                return null;
+            }
+
+            // Get current round-robin tracking for this rule and role
+            const trackingResult = await db.query(`
+                SELECT "last_assigned_user_id", "assignment_count"
+                FROM "RoundRobinTracking"
+                WHERE "automation_rule_id" = $1 AND "role_name" = $2
+            `, [rule.rule_id, roleName]);
+
+            let nextUserId;
+
+            if (trackingResult.rows.length === 0) {
+                // First assignment for this rule+role combination
+                nextUserId = users[0].id;
+                console.log(`[Automation] First round-robin assignment for rule ${rule.rule_id}, role ${roleName}: ${nextUserId}`);
+            } else {
+                // Find next user in round-robin sequence
+                const lastAssignedUserId = trackingResult.rows[0].last_assigned_user_id;
+                const currentIndex = users.findIndex(user => user.id === lastAssignedUserId);
+
+                if (currentIndex === -1) {
+                    // Last assigned user no longer exists or doesn't have the role, start from beginning
+                    nextUserId = users[0].id;
+                    console.log(`[Automation] Last assigned user not found, restarting round-robin for rule ${rule.rule_id}`);
+                } else {
+                    // Get next user in sequence (wrap around to beginning if at end)
+                    const nextIndex = (currentIndex + 1) % users.length;
+                    nextUserId = users[nextIndex].id;
+                    console.log(`[Automation] Round-robin assignment for rule ${rule.rule_id}: ${lastAssignedUserId} -> ${nextUserId}`);
+                }
+            }
+
+            // Update round-robin tracking
+            await db.query(`
+                INSERT INTO "RoundRobinTracking" (
+                    "automation_rule_id",
+                    "role_name",
+                    "last_assigned_user_id",
+                    "assignment_count",
+                    "last_assignment_timestamp"
+                ) VALUES ($1, $2, $3, 1, NOW())
+                ON CONFLICT ("automation_rule_id", "role_name")
+                DO UPDATE SET
+                    "last_assigned_user_id" = EXCLUDED."last_assigned_user_id",
+                    "assignment_count" = "RoundRobinTracking"."assignment_count" + 1,
+                    "last_assignment_timestamp" = EXCLUDED."last_assignment_timestamp",
+                    "updated_at" = NOW()
+            `, [rule.rule_id, roleName, nextUserId]);
+
+            // Log the round-robin assignment
+            await AuditLogger.logAutomation(
+                nextUserId,
+                'ROUND_ROBIN_ASSIGNMENT',
+                {
+                    ruleId: rule.rule_id,
+                    roleName,
+                    assignedUserId: nextUserId,
+                    totalUsersInRole: users.length
+                }
+            );
+
+            return nextUserId;
+
+        } catch (error) {
+            console.error('[Automation] Error in role-based round-robin assignment:', error);
+            return null;
         }
     }
 

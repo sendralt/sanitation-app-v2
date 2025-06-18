@@ -66,6 +66,17 @@ const ensureManager = (req, res, next) => {
   res.redirect('/login-page');
 };
 
+// Middleware to ensure the user is a compliance officer, manager, or admin
+const ensureCompliance = (req, res, next) => {
+  if (req.isAuthenticated && req.isAuthenticated() && req.user &&
+      (req.user.role === 'compliance' || req.user.role === 'manager' ||
+       req.user.role === 'admin' || req.user.isAdmin === true)) {
+    return next();
+  }
+  req.flash('error', 'Access denied. Compliance officer privileges required.');
+  res.redirect('/login-page');
+};
+
 // Middleware to ensure the user can manage a specific user (for API endpoints)
 const ensureCanManageUser = (targetUserIdParam = 'userId') => {
   return (req, res, next) => {
@@ -101,5 +112,6 @@ module.exports = {
   authenticateJwt,
   ensureAdmin,
   ensureManager,
+  ensureCompliance,
   ensureCanManageUser,
 };
