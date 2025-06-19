@@ -43,7 +43,7 @@ async function fetchConfig() {
         
         // Fallback to default configuration for development
         const fallbackConfig = {
-            backendApiUrl: 'https://localhost:3001',
+            backendApiUrl: 'http://localhost:3001',
             supervisorEmail: 'supervisor@company.com',
             environment: 'development',
             version: 'unknown'

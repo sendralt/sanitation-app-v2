@@ -1,0 +1,448 @@
+<%- include('../partials/header', { title: title }) %>
+
+<div class="page-container">
+  <header class="page-header">
+    <h1><i class="fas fa-hdd"></i> Backup Management</h1>
+    <p class="page-description">Manage system backups and data recovery</p>
+  </header>
+
+  <!-- Flash Messages -->
+  <% if (locals.errorMessages && errorMessages.length > 0) { %>
+    <div class="alert alert-danger">
+      <% errorMessages.forEach(function(message) { %>
+        <p><%= message %></p>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <% if (locals.successMessages && successMessages.length > 0) { %>
+    <div class="alert alert-success">
+      <% successMessages.forEach(function(message) { %>
+        <p><%= message %></p>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- Action Buttons -->
+  <div class="action-bar">
+    <button class="btn btn-primary" onclick="createBackup()">
+      <i class="fas fa-plus"></i> Create Backup Now
+    </button>
+    <button class="btn btn-outline-primary" onclick="refreshBackupList()">
+      <i class="fas fa-sync-alt"></i> Refresh List
+    </button>
+    <a href="/admin" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+    </a>
+  </div>
+
+  <!-- Backup Status -->
+  <div class="status-grid">
+    <div class="status-card">
+      <div class="status-icon">💾</div>
+      <div class="status-info">
+        <div class="status-title">Last Backup</div>
+        <div class="status-value">2 hours ago</div>
+      </div>
+    </div>
+    
+    <div class="status-card">
+      <div class="status-icon">📊</div>
+      <div class="status-info">
+        <div class="status-title">Total Backups</div>
+        <div class="status-value">12</div>
+      </div>
+    </div>
+    
+    <div class="status-card">
+      <div class="status-icon">💽</div>
+      <div class="status-info">
+        <div class="status-title">Storage Used</div>
+        <div class="status-value">2.4 GB</div>
+      </div>
+    </div>
+    
+    <div class="status-card">
+      <div class="status-icon">⚙️</div>
+      <div class="status-info">
+        <div class="status-title">Auto Backup</div>
+        <div class="status-value">Enabled</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup Configuration -->
+  <div class="backup-section">
+    <h2><i class="fas fa-cog"></i> Backup Configuration</h2>
+    
+    <div class="config-form">
+      <div class="form-group">
+        <label class="form-label">Backup Frequency</label>
+        <select class="form-control">
+          <option value="daily" selected>Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="manual">Manual Only</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Backup Time</label>
+        <input type="time" class="form-control" value="02:00">
+        <small class="form-help">Time when automatic backups are created</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Retention Period (days)</label>
+        <input type="number" class="form-control" value="30" min="7" max="365">
+        <small class="form-help">How long to keep backup files</small>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-item">
+          <input type="checkbox" checked> Include user data
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" checked> Include checklist submissions
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" checked> Include system logs
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox"> Include uploaded files
+        </label>
+      </div>
+
+      <button class="btn btn-primary">
+        <i class="fas fa-save"></i> Save Configuration
+      </button>
+    </div>
+  </div>
+
+  <!-- Backup History -->
+  <div class="backup-section">
+    <h2><i class="fas fa-history"></i> Backup History</h2>
+    
+    <div class="backup-table-container">
+      <table class="backup-table">
+        <thead>
+          <tr>
+            <th>Date Created</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2025-06-19 02:00:15</td>
+            <td><span class="backup-type auto">Automatic</span></td>
+            <td>245 MB</td>
+            <td><span class="status-badge success">Complete</span></td>
+            <td class="actions">
+              <button class="btn btn-sm btn-outline-primary" onclick="downloadBackup('backup-20250619.sql')">
+                <i class="fas fa-download"></i> Download
+              </button>
+              <button class="btn btn-sm btn-outline-warning" onclick="restoreBackup('backup-20250619.sql')">
+                <i class="fas fa-undo"></i> Restore
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteBackup('backup-20250619.sql')">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>2025-06-18 02:00:12</td>
+            <td><span class="backup-type auto">Automatic</span></td>
+            <td>243 MB</td>
+            <td><span class="status-badge success">Complete</span></td>
+            <td class="actions">
+              <button class="btn btn-sm btn-outline-primary" onclick="downloadBackup('backup-20250618.sql')">
+                <i class="fas fa-download"></i> Download
+              </button>
+              <button class="btn btn-sm btn-outline-warning" onclick="restoreBackup('backup-20250618.sql')">
+                <i class="fas fa-undo"></i> Restore
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteBackup('backup-20250618.sql')">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>2025-06-17 14:30:45</td>
+            <td><span class="backup-type manual">Manual</span></td>
+            <td>241 MB</td>
+            <td><span class="status-badge success">Complete</span></td>
+            <td class="actions">
+              <button class="btn btn-sm btn-outline-primary" onclick="downloadBackup('backup-manual-20250617.sql')">
+                <i class="fas fa-download"></i> Download
+              </button>
+              <button class="btn btn-sm btn-outline-warning" onclick="restoreBackup('backup-manual-20250617.sql')">
+                <i class="fas fa-undo"></i> Restore
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteBackup('backup-manual-20250617.sql')">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recovery Options -->
+  <div class="backup-section">
+    <h2><i class="fas fa-life-ring"></i> Recovery Options</h2>
+    
+    <div class="recovery-options">
+      <div class="recovery-card">
+        <div class="recovery-icon">🔄</div>
+        <div class="recovery-content">
+          <h4>Point-in-Time Recovery</h4>
+          <p>Restore the database to a specific point in time using transaction logs.</p>
+          <button class="btn btn-outline-primary">
+            <i class="fas fa-clock"></i> Configure Recovery Point
+          </button>
+        </div>
+      </div>
+
+      <div class="recovery-card">
+        <div class="recovery-icon">📤</div>
+        <div class="recovery-content">
+          <h4>Export Data</h4>
+          <p>Export specific data sets for analysis or migration purposes.</p>
+          <button class="btn btn-outline-primary">
+            <i class="fas fa-file-export"></i> Export Data
+          </button>
+        </div>
+      </div>
+
+      <div class="recovery-card">
+        <div class="recovery-icon">📥</div>
+        <div class="recovery-content">
+          <h4>Import Backup</h4>
+          <p>Upload and restore from an external backup file.</p>
+          <button class="btn btn-outline-primary">
+            <i class="fas fa-file-import"></i> Import Backup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function createBackup() {
+  if (confirm('Create a new backup now? This may take a few minutes.')) {
+    alert('Backup creation started. You will be notified when complete.');
+    // TODO: Implement actual backup creation
+  }
+}
+
+function refreshBackupList() {
+  window.location.reload();
+}
+
+function downloadBackup(filename) {
+  alert(`Downloading backup: ${filename}`);
+  // TODO: Implement backup download
+}
+
+function restoreBackup(filename) {
+  if (confirm(`Are you sure you want to restore from ${filename}? This will overwrite current data.`)) {
+    alert('Restore operation started. This may take several minutes.');
+    // TODO: Implement backup restore
+  }
+}
+
+function deleteBackup(filename) {
+  if (confirm(`Are you sure you want to delete backup ${filename}? This action cannot be undone.`)) {
+    alert(`Backup ${filename} deleted.`);
+    // TODO: Implement backup deletion
+  }
+}
+</script>
+
+<style>
+.action-bar {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.status-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-icon {
+  font-size: 2rem;
+}
+
+.status-title {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.status-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.backup-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.backup-section h2 {
+  margin-bottom: 1.5rem;
+  color: #495057;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 0.5rem;
+}
+
+.config-form {
+  max-width: 500px;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-help {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: normal;
+}
+
+.backup-table-container {
+  overflow-x: auto;
+}
+
+.backup-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.backup-table th,
+.backup-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.backup-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+}
+
+.backup-type {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.backup-type.auto {
+  background-color: #007bff;
+  color: white;
+}
+
+.backup-type.manual {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-badge.success {
+  background-color: #28a745;
+  color: white;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.recovery-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.recovery-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.recovery-icon {
+  font-size: 2rem;
+}
+
+.recovery-content h4 {
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.recovery-content p {
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .recovery-options {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<%- include('../partials/footer') %>

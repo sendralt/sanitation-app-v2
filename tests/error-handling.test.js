@@ -245,21 +245,202 @@ describe('Error Handling Middleware', () => {
 });
 
 describe('Error Handling Integration Tests', () => {
-    // These tests would require the actual Express apps to be running
+    // These tests require the actual Express apps to be running
     // They test the end-to-end error handling behavior
-    
+
     describe('Backend API Error Handling', () => {
-        it('should return 404 for non-existent routes');
-        it('should return 401 for unauthorized access');
-        it('should return 400 for validation errors');
-        it('should return 500 for server errors');
-        it('should include request ID in all error responses');
+        it('should return 404 for non-existent routes', async () => {
+            // Mock Express app for testing
+            const express = require('express');
+            const app = express();
+
+            // Add the error handling middleware
+            app.use(globalErrorHandler);
+            app.use(notFoundHandler);
+
+            const response = await request(app)
+                .get('/non-existent-route')
+                .expect(404);
+
+            expect(response.body).to.have.property('status', 'fail');
+            expect(response.body).to.have.property('message');
+            expect(response.body).to.have.property('code', 'NOT_FOUND');
+        });
+
+        it('should return 401 for unauthorized access', async () => {
+            const express = require('express');
+            const app = express();
+
+            // Add a protected route that throws AuthenticationError
+            app.get('/protected', (req, res, next) => {
+                next(new AuthenticationError('Authentication required'));
+            });
+
+            app.use(globalErrorHandler);
+
+            const response = await request(app)
+                .get('/protected')
+                .expect(401);
+
+            expect(response.body).to.have.property('status', 'fail');
+            expect(response.body).to.have.property('message', 'Authentication required');
+            expect(response.body).to.have.property('code', 'AUTHENTICATION_ERROR');
+        });
+
+        it('should return 400 for validation errors', async () => {
+            const express = require('express');
+            const app = express();
+
+            app.post('/validate', (req, res, next) => {
+                next(new ValidationError('Invalid input data', { field: 'username' }));
+            });
+
+            app.use(globalErrorHandler);
+
+            const response = await request(app)
+                .post('/validate')
+                .expect(400);
+
+            expect(response.body).to.have.property('status', 'fail');
+            expect(response.body).to.have.property('message', 'Invalid input data');
+            expect(response.body).to.have.property('code', 'VALIDATION_ERROR');
+            expect(response.body).to.have.property('details');
+        });
+
+        it('should return 500 for server errors', async () => {
+            const express = require('express');
+            const app = express();
+
+            app.get('/error', (req, res, next) => {
+                // Simulate an unexpected error
+                throw new Error('Unexpected server error');
+            });
+
+            app.use(globalErrorHandler);
+
+            const response = await request(app)
+                .get('/error')
+                .expect(500);
+
+            expect(response.body).to.have.property('status', 'error');
+            expect(response.body).to.have.property('message');
+        });
+
+        it('should include request ID in all error responses', async () => {
+            const express = require('express');
+            const app = express();
+
+            app.use(requestIdMiddleware);
+
+            app.get('/test-error', (req, res, next) => {
+                next(new ValidationError('Test error'));
+            });
+
+            app.use(globalErrorHandler);
+
+            const response = await request(app)
+                .get('/test-error')
+                .expect(400);
+
+            expect(response.body).to.have.property('requestId');
+            expect(response.body.requestId).to.be.a('string');
+            expect(response.body.requestId).to.have.length.greaterThan(0);
+        });
     });
 
     describe('DHL Login Error Handling', () => {
-        it('should redirect to login for authentication errors');
-        it('should render error pages for web requests');
-        it('should return JSON for API requests');
-        it('should handle database errors gracefully');
+        it('should handle authentication errors appropriately', () => {
+            // Test that authentication errors are handled correctly
+            const error = new AuthenticationError('Invalid credentials');
+            const req = { method: 'POST', originalUrl: '/login' };
+            const res = {
+                status: function(code) {
+                    this.statusCode = code;
+                    return this;
+                },
+                json: function(data) {
+                    this.responseData = data;
+                },
+                redirect: function(url) {
+                    this.redirectUrl = url;
+                }
+            };
+            const next = () => {};
+
+            globalErrorHandler(error, req, res, next);
+
+            expect(res.statusCode).to.equal(401);
+            expect(res.responseData).to.have.property('status', 'fail');
+            expect(res.responseData).to.have.property('message', 'Invalid credentials');
+        });
+
+        it('should handle validation errors with proper formatting', () => {
+            const error = new ValidationError('Form validation failed', {
+                username: 'Username is required',
+                password: 'Password must be at least 8 characters'
+            });
+            const req = { method: 'POST', originalUrl: '/register' };
+            const res = {
+                status: function(code) {
+                    this.statusCode = code;
+                    return this;
+                },
+                json: function(data) {
+                    this.responseData = data;
+                }
+            };
+            const next = () => {};
+
+            globalErrorHandler(error, req, res, next);
+
+            expect(res.statusCode).to.equal(400);
+            expect(res.responseData).to.have.property('status', 'fail');
+            expect(res.responseData).to.have.property('details');
+            expect(res.responseData.details).to.have.property('username');
+            expect(res.responseData.details).to.have.property('password');
+        });
+
+        it('should handle database errors gracefully', () => {
+            const error = new DatabaseError('Connection failed', 'DB_CONNECTION_ERROR');
+            const req = { method: 'GET', originalUrl: '/users' };
+            const res = {
+                status: function(code) {
+                    this.statusCode = code;
+                    return this;
+                },
+                json: function(data) {
+                    this.responseData = data;
+                }
+            };
+            const next = () => {};
+
+            globalErrorHandler(error, req, res, next);
+
+            expect(res.statusCode).to.equal(500);
+            expect(res.responseData).to.have.property('status', 'error');
+            expect(res.responseData).to.have.property('code', 'DB_CONNECTION_ERROR');
+        });
+
+        it('should handle rate limit errors correctly', () => {
+            const error = new RateLimitError('Too many requests');
+            const req = { method: 'POST', originalUrl: '/api/login' };
+            const res = {
+                status: function(code) {
+                    this.statusCode = code;
+                    return this;
+                },
+                json: function(data) {
+                    this.responseData = data;
+                }
+            };
+            const next = () => {};
+
+            globalErrorHandler(error, req, res, next);
+
+            expect(res.statusCode).to.equal(429);
+            expect(res.responseData).to.have.property('status', 'fail');
+            expect(res.responseData).to.have.property('message', 'Too many requests');
+            expect(res.responseData).to.have.property('code', 'RATE_LIMIT_ERROR');
+        });
     });
 });

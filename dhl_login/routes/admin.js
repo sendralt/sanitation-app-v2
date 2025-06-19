@@ -6,6 +6,7 @@ const User = require('../models/user'); // Needed for checking username existenc
 const { hashPassword, hashAnswer } = require('../utils/auth');
 const lusca = require('lusca');
 const AuditLogger = require('../../backend/utils/auditLogger'); // Import audit logger
+const sequelize = require('../config/sequelize');
 
 // Import PostgreSQL database connection
 const { Pool } = require('pg');
@@ -173,6 +174,131 @@ router.get('/users/new', ensureAuthenticated, ensureAdmin, lusca.csrf(), (req, r
   }
 });
 
+// POST route to handle user editing
+router.post('/users/edit/:id', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
+  const userId = req.params.id;
+  const { username, firstName, lastName, role, department, managerId, isAdmin, newPassword, confirmPassword } = req.body;
+  const formData = req.body;
+  let validationErrors = {};
+
+  try {
+    const userToEdit = await User.findByPk(userId);
+    if (!userToEdit) {
+      req.flash('error', 'User not found.');
+      return res.redirect('/admin/users');
+    }
+
+    // Basic validation
+    if (!firstName || firstName.trim() === '') {
+      validationErrors.firstName = 'First Name is required.';
+    }
+    if (!lastName || lastName.trim() === '') {
+      validationErrors.lastName = 'Last Name is required.';
+    }
+    if (!username || username.trim() === '') {
+      validationErrors.username = 'Username is required.';
+    }
+
+    // Check if username is already taken by another user
+    if (username !== userToEdit.username) {
+      const existingUser = await User.findOne({ where: { username } });
+      if (existingUser) {
+        validationErrors.username = 'Username is already taken.';
+      }
+    }
+
+    // Password validation if provided
+    if (newPassword) {
+      if (newPassword.length < 6) {
+        validationErrors.password = 'Password must be at least 6 characters long.';
+      }
+      if (newPassword !== confirmPassword) {
+        validationErrors.password = 'Passwords do not match.';
+      }
+    }
+
+    // If validation fails, re-render form
+    if (Object.keys(validationErrors).length > 0) {
+      const securityQuestions = getSecurityQuestions();
+      return res.render('admin/edit-user', {
+        title: 'Edit User',
+        userToEdit,
+        securityQuestions,
+        user: req.user,
+        formData,
+        errorMessages: req.flash('error'),
+        validationErrors,
+        _csrf: req.csrfToken()
+      });
+    }
+
+    // Update user
+    const updateData = {
+      username,
+      firstName,
+      lastName,
+      role,
+      department,
+      managerId: managerId || null,
+      isAdmin: isAdmin === 'true'
+    };
+
+    if (newPassword) {
+      updateData.passwordHash = await hashPassword(newPassword);
+    }
+
+    await userToEdit.update(updateData);
+
+    // Log the user update action
+    await AuditLogger.logAdmin(req.user.id, 'USER_UPDATED', {
+      targetUserId: userId,
+      targetUsername: username,
+      changes: updateData
+    });
+
+    req.flash('success', `User '${username}' updated successfully.`);
+    res.redirect('/admin/users');
+  } catch (error) {
+    console.error('Error updating user:', error);
+    req.flash('error', 'An error occurred while updating the user.');
+    res.redirect('/admin/users');
+  }
+});
+
+// DELETE route to handle user deletion
+router.post('/users/delete/:id', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const userToDelete = await User.findByPk(userId);
+    if (!userToDelete) {
+      req.flash('error', 'User not found.');
+      return res.redirect('/admin/users');
+    }
+
+    // Prevent admin from deleting themselves
+    if (userToDelete.id === req.user.id) {
+      req.flash('error', 'You cannot delete your own account.');
+      return res.redirect('/admin/users');
+    }
+
+    // Log the user deletion action before deleting
+    await AuditLogger.logAdmin(req.user.id, 'USER_DELETED', {
+      targetUserId: userToDelete.id,
+      targetUsername: userToDelete.username,
+      targetUserRole: userToDelete.role
+    });
+
+    await userToDelete.destroy();
+    req.flash('success', `User '${userToDelete.username}' deleted successfully.`);
+    res.redirect('/admin/users');
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    req.flash('error', 'An error occurred while deleting the user.');
+    res.redirect('/admin/users');
+  }
+});
+
 // POST route to handle new user creation
 router.post('/users', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
   const { username, password, firstName, lastName, securityQuestion1Id, securityAnswer1, securityQuestion2Id, securityAnswer2 } = req.body;
@@ -256,7 +382,7 @@ router.post('/users', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req
     const securityAnswer1Hash = await hashAnswer(securityAnswers[0].answer);
     const securityAnswer2Hash = await hashAnswer(securityAnswers[1].answer);
 
-    await User.create({
+    const user = await User.create({
       username,
       firstName,
       lastName,
@@ -267,6 +393,14 @@ router.post('/users', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req
       securityAnswer2Hash,
       isAdmin: false, // By default, users created via this form are not admins
                       // Add a checkbox in the form if admin creation is desired here
+    });
+
+    // Log the user creation action
+    await AuditLogger.logAdmin(req.user.id, 'USER_CREATED', {
+      targetUserId: user.id,
+      targetUsername: username,
+      targetUserRole: user.role,
+      isAdmin: user.isAdmin
     });
 
     req.flash('success', `User '${username}' created successfully.`);
@@ -286,6 +420,200 @@ router.post('/users', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req
       _csrf: req.csrfToken() // Pass CSRF token
     });
   }
+});
+
+// User Management Routes
+
+// GET route to display user creation form
+router.get('/users/new', ensureAuthenticated, ensureAdmin, (req, res) => {
+  const securityQuestions = getSecurityQuestions();
+  res.render('admin/create-user', {
+    title: 'Create New User',
+    securityQuestions,
+    user: req.user,
+    formData: {},
+    errorMessages: req.flash('error'),
+    successMessages: req.flash('success'),
+    validationErrors: {},
+    _csrf: req.csrfToken()
+  });
+});
+
+// GET route to display all users
+router.get('/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: ['id', 'username', 'firstName', 'lastName', 'role', 'department', 'isAdmin', 'createdAt'],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.render('admin/users-list', {
+      title: 'User Management',
+      users,
+      user: req.user,
+      errorMessages: req.flash('error'),
+      successMessages: req.flash('success')
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    req.flash('error', 'An error occurred while fetching users.');
+    res.redirect('/admin');
+  }
+});
+
+// GET route to display user edit form
+router.get('/users/edit/:id', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const userToEdit = await User.findByPk(userId);
+
+    if (!userToEdit) {
+      req.flash('error', 'User not found.');
+      return res.redirect('/admin/users');
+    }
+
+    // Get all managers for the manager dropdown
+    const managers = await User.findAll({
+      where: {
+        role: ['manager', 'admin']
+      },
+      attributes: ['id', 'username', 'firstName', 'lastName'],
+      order: [['firstName', 'ASC'], ['lastName', 'ASC']]
+    });
+
+    const securityQuestions = getSecurityQuestions();
+    res.render('admin/edit-user', {
+      title: 'Edit User',
+      userToEdit,
+      managers,
+      securityQuestions,
+      user: req.user,
+      formData: {},
+      errorMessages: req.flash('error'),
+      successMessages: req.flash('success'),
+      validationErrors: {},
+      _csrf: req.csrfToken()
+    });
+  } catch (error) {
+    console.error('Error fetching user for edit:', error);
+    req.flash('error', 'An error occurred while fetching user details.');
+    res.redirect('/admin/users');
+  }
+});
+
+// Bulk Operations Routes
+
+// Bulk role change
+router.post('/users/bulk-role-change', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
+  const { userIds, newRole } = req.body;
+
+  if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    req.flash('error', 'No users selected.');
+    return res.redirect('/admin/users');
+  }
+
+  if (!['user', 'manager', 'compliance', 'admin'].includes(newRole)) {
+    req.flash('error', 'Invalid role specified.');
+    return res.redirect('/admin/users');
+  }
+
+  try {
+    // Update all selected users
+    const updateResult = await User.update(
+      { role: newRole },
+      { where: { id: userIds } }
+    );
+
+    // Log the bulk role change
+    await AuditLogger.logAdmin(req.user.id, 'BULK_ROLE_CHANGE', {
+      targetUserIds: userIds,
+      newRole: newRole,
+      affectedCount: updateResult[0]
+    });
+
+    req.flash('success', `Successfully updated role to "${newRole}" for ${updateResult[0]} users.`);
+    res.redirect('/admin/users');
+  } catch (error) {
+    console.error('Error in bulk role change:', error);
+    req.flash('error', 'An error occurred while updating user roles.');
+    res.redirect('/admin/users');
+  }
+});
+
+// Bulk delete
+router.post('/users/bulk-delete', ensureAuthenticated, ensureAdmin, lusca.csrf(), async (req, res) => {
+  const { userIds } = req.body;
+
+  if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    req.flash('error', 'No users selected.');
+    return res.redirect('/admin/users');
+  }
+
+  try {
+    // Prevent admin from deleting themselves
+    if (userIds.includes(req.user.id)) {
+      req.flash('error', 'You cannot delete your own account.');
+      return res.redirect('/admin/users');
+    }
+
+    // Get user details for logging before deletion
+    const usersToDelete = await User.findAll({
+      where: { id: userIds },
+      attributes: ['id', 'username', 'role']
+    });
+
+    // Delete users
+    const deleteResult = await User.destroy({
+      where: { id: userIds }
+    });
+
+    // Log the bulk deletion
+    await AuditLogger.logAdmin(req.user.id, 'BULK_USER_DELETE', {
+      deletedUsers: usersToDelete.map(u => ({
+        id: u.id,
+        username: u.username,
+        role: u.role
+      })),
+      deletedCount: deleteResult
+    });
+
+    req.flash('success', `Successfully deleted ${deleteResult} users.`);
+    res.redirect('/admin/users');
+  } catch (error) {
+    console.error('Error in bulk delete:', error);
+    req.flash('error', 'An error occurred while deleting users.');
+    res.redirect('/admin/users');
+  }
+});
+
+// Automation Rules Route
+router.get('/automation-rules', ensureAuthenticated, ensureAdmin, (req, res) => {
+  res.render('admin/automation-rules', {
+    title: 'Automation Rules',
+    user: req.user,
+    errorMessages: req.flash('error'),
+    successMessages: req.flash('success')
+  });
+});
+
+// System Settings Route
+router.get('/settings', ensureAuthenticated, ensureAdmin, (req, res) => {
+  res.render('admin/settings', {
+    title: 'System Settings',
+    user: req.user,
+    errorMessages: req.flash('error'),
+    successMessages: req.flash('success')
+  });
+});
+
+// Backup Management Route
+router.get('/backup', ensureAuthenticated, ensureAdmin, (req, res) => {
+  res.render('admin/backup', {
+    title: 'Backup Management',
+    user: req.user,
+    errorMessages: req.flash('error'),
+    successMessages: req.flash('success')
+  });
 });
 
 // PostgreSQL Data Viewing Routes

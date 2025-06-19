@@ -1,0 +1,345 @@
+<%- include('../partials/header', { title: title }) %>
+
+<div class="page-container">
+  <header class="page-header">
+    <h1><i class="fas fa-users"></i> User Management</h1>
+    <p class="page-description">Manage system users, roles, and permissions</p>
+  </header>
+
+  <!-- Flash Messages -->
+  <% if (locals.errorMessages && errorMessages.length > 0) { %>
+    <div class="alert alert-danger">
+      <% errorMessages.forEach(function(message) { %>
+        <p><%= message %></p>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <% if (locals.successMessages && successMessages.length > 0) { %>
+    <div class="alert alert-success">
+      <% successMessages.forEach(function(message) { %>
+        <p><%= message %></p>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- Action Buttons -->
+  <div class="action-bar">
+    <a href="/admin/users/new" class="btn btn-primary">
+      <i class="fas fa-user-plus"></i> Create New User
+    </a>
+    <div class="bulk-actions" style="display: none;">
+      <button class="btn btn-warning" onclick="bulkChangeRole()">
+        <i class="fas fa-users-cog"></i> Change Role
+      </button>
+      <button class="btn btn-danger" onclick="bulkDelete()">
+        <i class="fas fa-trash-alt"></i> Delete Selected
+      </button>
+    </div>
+    <a href="/admin" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+    </a>
+  </div>
+
+  <!-- Users Table -->
+  <div class="data-table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>
+            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+          </th>
+          <th>Username</th>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Department</th>
+          <th>Admin</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (users && users.length > 0) { %>
+          <% users.forEach(function(userItem) { %>
+            <tr>
+              <td>
+                <input type="checkbox" class="user-select" value="<%= userItem.id %>" onchange="toggleBulkActions()">
+              </td>
+              <td><%= userItem.username %></td>
+              <td><%= userItem.firstName %> <%= userItem.lastName %></td>
+              <td>
+                <span class="role-badge role-<%= userItem.role %>">
+                  <%= userItem.role.charAt(0).toUpperCase() + userItem.role.slice(1) %>
+                </span>
+              </td>
+              <td><%= userItem.department || 'N/A' %></td>
+              <td>
+                <% if (userItem.isAdmin) { %>
+                  <span class="badge badge-success">Yes</span>
+                <% } else { %>
+                  <span class="badge badge-secondary">No</span>
+                <% } %>
+              </td>
+              <td><%= new Date(userItem.createdAt).toLocaleDateString() %></td>
+              <td class="actions">
+                <a href="/admin/users/edit/<%= userItem.id %>" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-edit"></i> Edit
+                </a>
+                <% if (userItem.id !== user.id) { %>
+                  <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('<%= userItem.id %>', '<%= userItem.username %>')">
+                    <i class="fas fa-trash"></i> Delete
+                  </button>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="text-center">No users found.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- User Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number"><%= users.length %></div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><%= users.filter(u => u.isAdmin).length %></div>
+      <div class="stat-label">Admin Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><%= users.filter(u => u.role === 'manager').length %></div>
+      <div class="stat-label">Managers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number"><%= users.filter(u => u.role === 'compliance').length %></div>
+      <div class="stat-label">Compliance Officers</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmDelete(userId, username) {
+  if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+    // Create a form to submit the delete request
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/users/delete/${userId}`;
+
+    // Add CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_csrf';
+    csrfInput.value = '<%= locals._csrf || "" %>';
+    form.appendChild(csrfInput);
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+
+function toggleSelectAll() {
+  const selectAll = document.getElementById('selectAll');
+  const checkboxes = document.querySelectorAll('.user-select');
+
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = selectAll.checked;
+  });
+
+  toggleBulkActions();
+}
+
+function toggleBulkActions() {
+  const checkboxes = document.querySelectorAll('.user-select:checked');
+  const bulkActions = document.querySelector('.bulk-actions');
+
+  if (checkboxes.length > 0) {
+    bulkActions.style.display = 'block';
+  } else {
+    bulkActions.style.display = 'none';
+  }
+}
+
+function getSelectedUserIds() {
+  const checkboxes = document.querySelectorAll('.user-select:checked');
+  return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function bulkChangeRole() {
+  const selectedIds = getSelectedUserIds();
+  if (selectedIds.length === 0) {
+    alert('Please select users first.');
+    return;
+  }
+
+  const newRole = prompt('Enter new role (user, manager, compliance, admin):');
+  if (!newRole || !['user', 'manager', 'compliance', 'admin'].includes(newRole)) {
+    alert('Invalid role. Please enter: user, manager, compliance, or admin');
+    return;
+  }
+
+  if (confirm(`Change role to "${newRole}" for ${selectedIds.length} selected users?`)) {
+    // Create form for bulk role change
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/users/bulk-role-change';
+
+    // Add CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_csrf';
+    csrfInput.value = '<%= locals._csrf || "" %>';
+    form.appendChild(csrfInput);
+
+    // Add user IDs
+    selectedIds.forEach(id => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'userIds[]';
+      input.value = id;
+      form.appendChild(input);
+    });
+
+    // Add new role
+    const roleInput = document.createElement('input');
+    roleInput.type = 'hidden';
+    roleInput.name = 'newRole';
+    roleInput.value = newRole;
+    form.appendChild(roleInput);
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+
+function bulkDelete() {
+  const selectedIds = getSelectedUserIds();
+  if (selectedIds.length === 0) {
+    alert('Please select users first.');
+    return;
+  }
+
+  if (confirm(`Are you sure you want to delete ${selectedIds.length} selected users? This action cannot be undone.`)) {
+    // Create form for bulk delete
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/users/bulk-delete';
+
+    // Add CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_csrf';
+    csrfInput.value = '<%= locals._csrf || "" %>';
+    form.appendChild(csrfInput);
+
+    // Add user IDs
+    selectedIds.forEach(id => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'userIds[]';
+      input.value = id;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+</script>
+
+<style>
+.action-bar {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.data-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+}
+
+.data-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.role-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.role-admin { background-color: #dc3545; color: white; }
+.role-manager { background-color: #007bff; color: white; }
+.role-compliance { background-color: #28a745; color: white; }
+.role-user { background-color: #6c757d; color: white; }
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-success { background-color: #28a745; color: white; }
+.badge-secondary { background-color: #6c757d; color: white; }
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.stat-label {
+  color: #6c757d;
+  margin-top: 0.5rem;
+}
+</style>
+
+<%- include('../partials/footer') %>
