@@ -1683,9 +1683,9 @@ app.get('/api/analytics/compliance', apiLimiter, authenticateApi, asyncHandler(a
     try {
         const compliance = await db.query(`
             SELECT * FROM "v_compliance_metrics"
-            WHERE "submission_date" >= NOW() - INTERVAL '${days} days'
+            WHERE "submission_date" >= NOW() - INTERVAL $1
             ORDER BY "submission_date" DESC, "original_checklist_filename"
-        `);
+        `, [`${days} days`]);
 
         res.json({
             success: true,
@@ -2077,10 +2077,10 @@ app.get('/api/analytics/completion-trends', apiLimiter, authenticateApi, asyncHa
                 JOIN "SubmissionTasks" st ON sh."heading_id" = st."heading_id"
                 GROUP BY cs2."submission_id"
             ) completed_tasks ON cs."submission_id" = completed_tasks."submission_id"
-            WHERE cs."submission_timestamp" >= NOW() - INTERVAL '${days} days'
+            WHERE cs."submission_timestamp" >= NOW() - INTERVAL $1
             GROUP BY DATE_TRUNC('day', cs."submission_timestamp")
             ORDER BY date DESC
-        `);
+        `, [`${days} days`]);
 
         res.json({
             success: true,
@@ -2115,9 +2115,9 @@ app.get('/api/analytics/validation-turnaround', apiLimiter, authenticateApi, asy
     try {
         const turnaroundData = await db.query(`
             SELECT * FROM "v_validation_metrics"
-            WHERE "validation_month" >= DATE_TRUNC('month', NOW() - INTERVAL '${days} days')
+            WHERE "validation_month" >= DATE_TRUNC('month', NOW() - INTERVAL $1)
             ORDER BY "validation_month" DESC, "total_validations" DESC
-        `);
+        `, [`${days} days`]);
 
         res.json({
             success: true,
@@ -2152,7 +2152,7 @@ app.get('/api/analytics/team-productivity', apiLimiter, authenticateApi, asyncHa
 
     try {
         let whereClause = '';
-        let params = [days];
+        let params = [`${days} days`];
 
         if (teamId) {
             whereClause = 'AND tm."team_id" = $2';
@@ -2175,7 +2175,7 @@ app.get('/api/analytics/team-productivity', apiLimiter, authenticateApi, asyncHa
                 AVG(EXTRACT(EPOCH FROM (svl."validation_timestamp" - cs."submission_timestamp"))/3600) as avg_turnaround_hours
             FROM "TeamMembers" tm
             LEFT JOIN "ChecklistSubmissions" cs ON tm."user_id" = cs."submitted_by_user_id"
-                AND cs."submission_timestamp" >= NOW() - INTERVAL '$1 days'
+                AND cs."submission_timestamp" >= NOW() - INTERVAL $1
             LEFT JOIN "ChecklistAssignments" ca ON tm."user_id" = ca."assigned_to_user_id"
             LEFT JOIN "SupervisorValidationsLog" svl ON cs."submission_id" = svl."submission_id"
             WHERE tm."is_active" = true ${whereClause}
@@ -2285,7 +2285,7 @@ app.get('/api/compliance/overview', apiLimiter, authenticateApi, asyncHandler(as
                 SELECT
                     cs."submission_id",
                     COUNT(st."task_id") as total_tasks,
-                    COUNT(CASE WHEN st."supervisor_validated_status" = true THEN 1 END) as validated_ok_tasks
+                    COUNT(CASE WHEN st."supervisor_validated_status"::text = 'true' THEN 1 END) as validated_ok_tasks
                 FROM "ChecklistSubmissions" cs
                 JOIN "SubmissionHeadings" sh ON cs."submission_id" = sh."submission_id"
                 JOIN "SubmissionTasks" st ON sh."heading_id" = st."heading_id"
@@ -2309,7 +2309,7 @@ app.get('/api/compliance/overview', apiLimiter, authenticateApi, asyncHandler(as
             FROM "SubmissionTasks" st
             JOIN "SubmissionHeadings" sh ON st."heading_id" = sh."heading_id"
             JOIN "ChecklistSubmissions" cs ON sh."submission_id" = cs."submission_id"
-            WHERE st."supervisor_validated_status" = false
+            WHERE st."supervisor_validated_status"::text = 'false'
             AND cs."submission_timestamp" >= NOW() - INTERVAL '30 days'
         `);
 
@@ -2364,11 +2364,11 @@ app.get('/api/compliance/metrics', apiLimiter, authenticateApi, asyncHandler(asy
     await AuditLogger.logAnalyticsAccess(userId, 'compliance_metrics', { days, checklistType });
 
     try {
-        let whereClause = `WHERE cs."submission_timestamp" >= NOW() - INTERVAL '${days} days'`;
-        let params = [];
+        let whereClause = `WHERE cs."submission_timestamp" >= NOW() - INTERVAL $1`;
+        let params = [`${days} days`];
 
         if (checklistType) {
-            whereClause += ` AND cs."original_checklist_filename" LIKE $1`;
+            whereClause += ` AND cs."original_checklist_filename" LIKE $2`;
             params.push(`%${checklistType}%`);
         }
 
@@ -2410,12 +2410,12 @@ app.get('/api/compliance/audit-trail', apiLimiter, authenticateApi, asyncHandler
     }
 
     // Log audit trail access
-    await AuditLogger.logAuditAccess(userId, 'audit_trail_view', { days, actionType, targetUserId });
+    await AuditLogger.logAnalyticsAccess(userId, 'audit_trail_view', { days, actionType, targetUserId });
 
     try {
         let whereClause = `WHERE at."timestamp" >= NOW() - INTERVAL '${days} days'`;
-        let params = [limit];
-        let paramIndex = 2;
+        let params = [];
+        let paramIndex = 1;
 
         if (actionType) {
             whereClause += ` AND at."action_type" = $${paramIndex}`;
@@ -2443,8 +2443,8 @@ app.get('/api/compliance/audit-trail', apiLimiter, authenticateApi, asyncHandler
             LEFT JOIN "ChecklistSubmissions" cs ON at."submission_id" = cs."submission_id"
             ${whereClause}
             ORDER BY at."timestamp" DESC
-            LIMIT $1
-        `, params);
+            LIMIT $${paramIndex}
+        `, [...params, limit]);
 
         res.json({
             success: true,
@@ -2483,10 +2483,10 @@ app.get('/api/compliance/non-compliance', apiLimiter, authenticateApi, asyncHand
     await AuditLogger.logAnalyticsAccess(userId, 'non_compliance_report', { days, severity, checklistType });
 
     try {
-        let whereClause = `WHERE cs."submission_timestamp" >= NOW() - INTERVAL '${days} days'
-                          AND st."supervisor_validated_status" = false`;
-        let params = [];
-        let paramIndex = 1;
+        let whereClause = `WHERE cs."submission_timestamp" >= NOW() - INTERVAL $1
+                          AND st."supervisor_validated_status"::text = 'false'`;
+        let params = [`${days} days`];
+        let paramIndex = 2;
 
         if (checklistType) {
             whereClause += ` AND cs."original_checklist_filename" LIKE $${paramIndex}`;
