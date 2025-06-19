@@ -325,23 +325,27 @@
 
     <% if (user && (user.role === 'admin' || user.isAdmin)) { %>
     <!-- Admin Panel -->
-    <div class="dashboard-card">
-      <div class="card-header">
-        <span class="card-icon">⚙️</span>
-        <h3 class="card-title">Admin Panel</h3>
+    <div class="card">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">
+          <span class="icon">🔧</span> Admin Panel
+        </h5>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        <a href="/admin" class="btn btn-secondary">
-          <i class="fas fa-tachometer-alt"></i> Admin Dashboard
+      <div class="card-body">
+        <a href="/admin" class="btn btn-outline-primary btn-block mb-2">
+          Admin Dashboard
         </a>
-        <a href="/admin/postgresql" class="btn btn-secondary">
-          <i class="fas fa-database"></i> PostgreSQL Dashboard
+        
+        <a href="/admin/postgresql-dashboard" class="btn btn-outline-primary btn-block mb-2">
+          PostgreSQL Dashboard
         </a>
-        <a href="/admin/automation-rules" class="btn btn-secondary">
-          <i class="fas fa-robot"></i> Automation Rules
+        
+        <a href="/admin/automation-rules" class="btn btn-outline-primary btn-block mb-2">
+          Automation Rules
         </a>
-        <a href="/admin/users/new" class="btn btn-secondary">
-          <i class="fas fa-user-plus"></i> Create User
+        
+        <a href="/admin/create-user" class="btn btn-outline-primary btn-block">
+          Create User
         </a>
       </div>
     </div>

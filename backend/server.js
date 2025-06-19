@@ -2285,7 +2285,7 @@ app.get('/api/compliance/overview', apiLimiter, authenticateApi, asyncHandler(as
                 SELECT
                     cs."submission_id",
                     COUNT(st."task_id") as total_tasks,
-                    COUNT(CASE WHEN st."supervisor_validated_status"::text = 'true' THEN 1 END) as validated_ok_tasks
+                    COUNT(CASE WHEN st."supervisor_validated_status" = true THEN 1 END) as validated_ok_tasks
                 FROM "ChecklistSubmissions" cs
                 JOIN "SubmissionHeadings" sh ON cs."submission_id" = sh."submission_id"
                 JOIN "SubmissionTasks" st ON sh."heading_id" = st."heading_id"
@@ -2309,7 +2309,7 @@ app.get('/api/compliance/overview', apiLimiter, authenticateApi, asyncHandler(as
             FROM "SubmissionTasks" st
             JOIN "SubmissionHeadings" sh ON st."heading_id" = sh."heading_id"
             JOIN "ChecklistSubmissions" cs ON sh."submission_id" = cs."submission_id"
-            WHERE st."supervisor_validated_status"::text = 'false'
+            WHERE st."supervisor_validated_status" = false
             AND cs."submission_timestamp" >= NOW() - INTERVAL '30 days'
         `);
 
@@ -2410,12 +2410,12 @@ app.get('/api/compliance/audit-trail', apiLimiter, authenticateApi, asyncHandler
     }
 
     // Log audit trail access
-    await AuditLogger.logAnalyticsAccess(userId, 'audit_trail_view', { days, actionType, targetUserId });
+    await AuditLogger.logAuditAccess(userId, 'audit_trail_view', { days, actionType, targetUserId });
 
     try {
-        let whereClause = `WHERE at."timestamp" >= NOW() - INTERVAL '${days} days'`;
-        let params = [];
-        let paramIndex = 1;
+        let whereClause = `WHERE at."timestamp" >= NOW() - INTERVAL $2`;
+        let params = [limit, `${days} days`];
+        let paramIndex = 3;
 
         if (actionType) {
             whereClause += ` AND at."action_type" = $${paramIndex}`;
@@ -2443,8 +2443,8 @@ app.get('/api/compliance/audit-trail', apiLimiter, authenticateApi, asyncHandler
             LEFT JOIN "ChecklistSubmissions" cs ON at."submission_id" = cs."submission_id"
             ${whereClause}
             ORDER BY at."timestamp" DESC
-            LIMIT $${paramIndex}
-        `, [...params, limit]);
+            LIMIT $1
+        `, params);
 
         res.json({
             success: true,
@@ -2484,7 +2484,7 @@ app.get('/api/compliance/non-compliance', apiLimiter, authenticateApi, asyncHand
 
     try {
         let whereClause = `WHERE cs."submission_timestamp" >= NOW() - INTERVAL $1
-                          AND st."supervisor_validated_status"::text = 'false'`;
+                          AND st."supervisor_validated_status" = false`;
         let params = [`${days} days`];
         let paramIndex = 2;
 

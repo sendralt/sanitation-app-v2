@@ -43,38 +43,93 @@ const authenticateJwt = (req, res, next) => {
 };
 
 // Middleware to ensure the user is an administrator
-const ensureAdmin = (req, res, next) => {
-  // Check if user is authenticated and is an admin
-  // This assumes that req.user is populated by a prior authentication middleware (e.g., session-based or JWT)
-  if (req.isAuthenticated && req.isAuthenticated() && req.user &&
-      (req.user.isAdmin === true || req.user.role === 'admin')) {
-    return next(); // User is admin, proceed to the next middleware/route handler
+exports.ensureAdmin = (req, res, next) => {
+  // Check if user is authenticated at all
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    console.log('[ensureAdmin] User not authenticated');
+    req.flash('error', 'Please log in to access this page');
+    return res.redirect('/login-page');
   }
-  // If not authenticated or not an admin, redirect or send an error
-  // For web pages, redirecting to login or a generic error page is common
-  req.flash('error', 'Access denied. You do not have permission to view this page.');
-  res.redirect('/login-page'); // Or consider redirecting to a more general access-denied page if you have one
+  
+  // Now check if user object exists
+  if (!req.user) {
+    console.log('[ensureAdmin] User object missing despite authentication');
+    req.flash('error', 'Authentication error. Please log in again.');
+    return res.redirect('/login-page');
+  }
+  
+  console.log('[ensureAdmin] Checking user role:', req.user.username, 'Role:', req.user.role, 'isAdmin:', req.user.isAdmin);
+  
+  // Check for admin role
+  if (req.user.isAdmin === true || req.user.role === 'admin') {
+    console.log('[ensureAdmin] User has admin role, proceeding');
+    return next();
+  }
+  
+  // If not admin, redirect to dashboard with error
+  console.log('[ensureAdmin] Access denied for user:', req.user.username, 'Role:', req.user.role);
+  req.flash('error', 'You do not have permission to access this page');
+  return res.redirect('/dashboard');
 };
 
 // Middleware to ensure the user is a manager or admin
 const ensureManager = (req, res, next) => {
-  if (req.isAuthenticated && req.isAuthenticated() && req.user &&
-      (req.user.role === 'manager' || req.user.role === 'admin' || req.user.isAdmin === true)) {
+  // Check if user is authenticated at all
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    console.log('[ensureManager] User not authenticated');
+    req.flash('error', 'Please log in to access this page');
+    return res.redirect('/login-page');
+  }
+  
+  // Now check if user object exists
+  if (!req.user) {
+    console.log('[ensureManager] User object missing despite authentication');
+    req.flash('error', 'Authentication error. Please log in again.');
+    return res.redirect('/login-page');
+  }
+  
+  console.log('[ensureManager] Checking user role:', req.user.username, 'Role:', req.user.role);
+  
+  // Check for manager or admin role
+  if (req.user.role === 'manager' || req.user.role === 'admin' || req.user.isAdmin === true) {
+    console.log('[ensureManager] User has manager/admin role, proceeding');
     return next();
   }
+  
+  // If not manager role, redirect to dashboard with error
+  console.log('[ensureManager] Access denied for user:', req.user.username, 'Role:', req.user.role);
   req.flash('error', 'Access denied. Manager privileges required.');
-  res.redirect('/login-page');
+  return res.redirect('/dashboard');
 };
 
-// Middleware to ensure the user is a compliance officer, manager, or admin
-const ensureCompliance = (req, res, next) => {
-  if (req.isAuthenticated && req.isAuthenticated() && req.user &&
-      (req.user.role === 'compliance' || req.user.role === 'manager' ||
-       req.user.role === 'admin' || req.user.isAdmin === true)) {
+// Middleware to ensure user has compliance role
+exports.ensureCompliance = (req, res, next) => {
+  // First check if user is authenticated at all
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    console.log('[ensureCompliance] User not authenticated');
+    req.flash('error', 'Please log in to access this page');
+    return res.redirect('/login-page');
+  }
+  
+  // Now check if user object exists
+  if (!req.user) {
+    console.log('[ensureCompliance] User object missing despite authentication');
+    req.flash('error', 'Authentication error. Please log in again.');
+    return res.redirect('/login-page');
+  }
+  
+  console.log('[ensureCompliance] Checking user role:', req.user.username, 'Role:', req.user.role);
+  
+  // Check for compliance or admin role
+  if (req.user.role === 'compliance' || req.user.role === 'admin' || req.user.isAdmin === true) {
+    console.log('[ensureCompliance] User has compliance/admin role, proceeding');
     return next();
   }
-  req.flash('error', 'Access denied. Compliance officer privileges required.');
-  res.redirect('/login-page');
+  
+  // If not compliance role, redirect to dashboard with error
+  console.log('[ensureCompliance] Access denied for user:', req.user.username, 'Role:', req.user.role);
+  req.flash('error', 'You do not have permission to access this page');
+  return res.redirect('/dashboard');
 };
 
 // Middleware to ensure the user can manage a specific user (for API endpoints)

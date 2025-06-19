@@ -50,4 +50,16 @@ router.get('/assignments', ensureAuthenticated, ensureManager, (req, res) => {
   });
 });
 
+// Test route that only checks authentication, not role
+router.get('/test-auth', ensureAuthenticated, (req, res) => {
+  res.json({
+    message: 'Authentication check passed',
+    user: {
+      username: req.user.username,
+      role: req.user.role,
+      isAdmin: req.user.isAdmin
+    }
+  });
+});
+
 module.exports = router;
