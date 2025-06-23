@@ -1,0 +1,175 @@
+<h2>Schedule Management</h2>
+
+<div style="margin-bottom: 20px;">
+    <a href="/manager" class="btn" style="background-color: #6c757d;">Back to Manager Dashboard</a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Today's Schedule</h3>
+        <div style="margin: 20px 0;">
+            <div style="border-left: 3px solid #28a745; padding-left: 15px; margin-bottom: 15px;">
+                <div style="font-weight: bold;">Morning Shift (6:00 AM - 2:00 PM)</div>
+                <div style="color: #6c757d; font-size: 14px;">5 workers assigned</div>
+            </div>
+            
+            <div style="border-left: 3px solid #ffc107; padding-left: 15px; margin-bottom: 15px;">
+                <div style="font-weight: bold;">Afternoon Shift (2:00 PM - 10:00 PM)</div>
+                <div style="color: #6c757d; font-size: 14px;">4 workers assigned</div>
+            </div>
+            
+            <div style="border-left: 3px solid #dc3545; padding-left: 15px; margin-bottom: 15px;">
+                <div style="font-weight: bold;">Night Shift (10:00 PM - 6:00 AM)</div>
+                <div style="color: #6c757d; font-size: 14px;">2 workers assigned</div>
+            </div>
+        </div>
+        <button class="btn" style="background-color: #28a745;">Create New Schedule</button>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Schedule Alerts</h3>
+        <div style="margin: 20px 0;">
+            <div style="padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; margin-bottom: 10px;">
+                <div style="font-weight: bold; color: #856404;">⚠️ Understaffed</div>
+                <div style="color: #856404; font-size: 14px;">Night shift needs 1 more worker</div>
+            </div>
+            
+            <div style="padding: 10px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px; margin-bottom: 10px;">
+                <div style="font-weight: bold; color: #0c5460;">ℹ️ Schedule Change</div>
+                <div style="color: #0c5460; font-size: 14px;">Mike Davis requested time off tomorrow</div>
+            </div>
+            
+            <div style="padding: 10px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+                <div style="font-weight: bold; color: #155724;">✅ All Set</div>
+                <div style="color: #155724; font-size: 14px;">Weekend schedule is fully staffed</div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Quick Actions</h3>
+        <div style="margin: 20px 0;">
+            <button class="btn" style="background-color: #17a2b8; width: 100%; margin-bottom: 10px;">View Weekly Schedule</button>
+            <button class="btn" style="background-color: #ffc107; color: #212529; width: 100%; margin-bottom: 10px;">Manage Time Off</button>
+            <button class="btn" style="background-color: #6f42c1; width: 100%; margin-bottom: 10px;">Schedule Templates</button>
+            <button class="btn" style="background-color: #28a745; width: 100%;">Emergency Coverage</button>
+        </div>
+    </div>
+    
+</div>
+
+<div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>Weekly Schedule Overview</h3>
+        <div>
+            <button class="btn" style="background-color: #17a2b8; margin-right: 10px;">Previous Week</button>
+            <button class="btn" style="background-color: #17a2b8;">Next Week</button>
+        </div>
+    </div>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Time</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Monday</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Tuesday</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Wednesday</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Thursday</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Friday</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Saturday</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Sunday</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px; font-weight: bold;">6:00 AM - 2:00 PM</td>
+                    <td style="padding: 12px;">John S.<br>Sarah J.<br>Mike D.</td>
+                    <td style="padding: 12px;">John S.<br>Lisa W.<br>Tom B.</td>
+                    <td style="padding: 12px;">Sarah J.<br>Mike D.<br>Lisa W.</td>
+                    <td style="padding: 12px;">John S.<br>Sarah J.<br>Tom B.</td>
+                    <td style="padding: 12px;">Mike D.<br>Lisa W.<br>Tom B.</td>
+                    <td style="padding: 12px;">John S.<br>Sarah J.</td>
+                    <td style="padding: 12px;">Mike D.<br>Lisa W.</td>
+                </tr>
+                
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px; font-weight: bold;">2:00 PM - 10:00 PM</td>
+                    <td style="padding: 12px;">Lisa W.<br>Tom B.<br>Alex R.</td>
+                    <td style="padding: 12px;">Sarah J.<br>Mike D.<br>Alex R.</td>
+                    <td style="padding: 12px;">John S.<br>Tom B.<br>Alex R.</td>
+                    <td style="padding: 12px;">Lisa W.<br>Mike D.<br>Alex R.</td>
+                    <td style="padding: 12px;">John S.<br>Sarah J.<br>Alex R.</td>
+                    <td style="padding: 12px;">Tom B.<br>Alex R.</td>
+                    <td style="padding: 12px;">John S.<br>Tom B.</td>
+                </tr>
+                
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px; font-weight: bold;">10:00 PM - 6:00 AM</td>
+                    <td style="padding: 12px;">Alex R.<br>Night Guard</td>
+                    <td style="padding: 12px;">Tom B.<br>Night Guard</td>
+                    <td style="padding: 12px;">Alex R.<br>Night Guard</td>
+                    <td style="padding: 12px;">Tom B.<br>Night Guard</td>
+                    <td style="padding: 12px;">Alex R.<br>Night Guard</td>
+                    <td style="padding: 12px;">Night Guard</td>
+                    <td style="padding: 12px;">Night Guard</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h3>Recent Schedule Changes</h3>
+    
+    <div style="border-left: 3px solid #ffc107; padding-left: 15px; margin-bottom: 15px;">
+        <div style="font-weight: bold;">Mike Davis - Time Off Request</div>
+        <div style="color: #6c757d; font-size: 14px;">Requested tomorrow (Friday) off - Pending approval</div>
+        <div style="margin-top: 10px;">
+            <button class="btn" style="background-color: #28a745; padding: 6px 12px; margin-right: 5px;">Approve</button>
+            <button class="btn" style="background-color: #dc3545; padding: 6px 12px;">Deny</button>
+        </div>
+    </div>
+    
+    <div style="border-left: 3px solid #28a745; padding-left: 15px; margin-bottom: 15px;">
+        <div style="font-weight: bold;">Sarah Johnson - Shift Swap</div>
+        <div style="color: #6c757d; font-size: 14px;">Swapped Wednesday morning with Lisa Wilson - Approved</div>
+    </div>
+    
+    <div style="border-left: 3px solid #17a2b8; padding-left: 15px; margin-bottom: 15px;">
+        <div style="font-weight: bold;">Emergency Coverage Added</div>
+        <div style="color: #6c757d; font-size: 14px;">Added extra worker for Saturday night shift due to special event</div>
+    </div>
+</div>
+
+<style>
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d40511;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+table th {
+    font-weight: 600;
+}
+
+table tr:hover {
+    background-color: #f8f9fa;
+}
+
+table td {
+    font-size: 12px;
+    line-height: 1.4;
+}
+</style>

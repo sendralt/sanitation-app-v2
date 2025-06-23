@@ -43,7 +43,7 @@ const authenticateJwt = (req, res, next) => {
 };
 
 // Middleware to ensure the user is an administrator
-exports.ensureAdmin = (req, res, next) => {
+const ensureAdmin = (req, res, next) => {
   // Check if user is authenticated at all
   if (!req.isAuthenticated || !req.isAuthenticated()) {
     console.log('[ensureAdmin] User not authenticated');
@@ -103,7 +103,7 @@ const ensureManager = (req, res, next) => {
 };
 
 // Middleware to ensure user has compliance role
-exports.ensureCompliance = (req, res, next) => {
+const ensureCompliance = (req, res, next) => {
   // First check if user is authenticated at all
   if (!req.isAuthenticated || !req.isAuthenticated()) {
     console.log('[ensureCompliance] User not authenticated');

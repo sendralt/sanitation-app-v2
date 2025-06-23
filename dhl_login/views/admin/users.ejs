@@ -1,0 +1,109 @@
+<h2>Manage Users</h2>
+
+<div style="margin-bottom: 20px;">
+    <a href="/admin/create-user" class="btn">Create New User</a>
+    <a href="/admin" class="btn" style="background-color: #6c757d; margin-left: 10px;">Back to Admin Dashboard</a>
+</div>
+
+<div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h3>All Users (<%= users.length %>)</h3>
+    
+    <% if (users.length === 0) { %>
+        <p>No users found.</p>
+    <% } else { %>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Username</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Name</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Role</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Department</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Admin</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Created</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(function(userItem) { %>
+                        <tr style="border-bottom: 1px solid #dee2e6;">
+                            <td style="padding: 12px;">
+                                <strong><%= userItem.username %></strong>
+                            </td>
+                            <td style="padding: 12px;">
+                                <%= userItem.firstName %> <%= userItem.lastName %>
+                            </td>
+                            <td style="padding: 12px;">
+                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; 
+                                    <% if (userItem.role === 'admin') { %>
+                                        background-color: #ffc107; color: #212529;
+                                    <% } else if (userItem.role === 'manager') { %>
+                                        background-color: #17a2b8; color: white;
+                                    <% } else if (userItem.role === 'compliance') { %>
+                                        background-color: #6f42c1; color: white;
+                                    <% } else { %>
+                                        background-color: #28a745; color: white;
+                                    <% } %>
+                                ">
+                                    <%= userItem.role.toUpperCase() %>
+                                </span>
+                            </td>
+                            <td style="padding: 12px;">
+                                <%= userItem.department || '-' %>
+                            </td>
+                            <td style="padding: 12px;">
+                                <% if (userItem.isAdmin) { %>
+                                    <span style="color: #ffc107; font-weight: bold;">✓ Yes</span>
+                                <% } else { %>
+                                    <span style="color: #6c757d;">No</span>
+                                <% } %>
+                            </td>
+                            <td style="padding: 12px;">
+                                <%= new Date(userItem.createdAt).toLocaleDateString() %>
+                            </td>
+                            <td style="padding: 12px;">
+                                <a href="/admin/users/<%= userItem.id %>/edit" 
+                                   style="color: #007bff; text-decoration: none; margin-right: 10px;">Edit</a>
+                                <% if (userItem.username !== user.username) { %>
+                                    <a href="/admin/users/<%= userItem.id %>/delete" 
+                                       style="color: #dc3545; text-decoration: none;"
+                                       onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</div>
+
+<style>
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d40511;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    background-color: #b8040f;
+}
+
+table th {
+    font-weight: 600;
+}
+
+table tr:hover {
+    background-color: #f8f9fa;
+}
+
+a:hover {
+    text-decoration: underline !important;
+}
+</style>

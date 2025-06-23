@@ -1,0 +1,124 @@
+<h2>Team Management</h2>
+
+<div style="margin-bottom: 20px;">
+    <a href="/manager" class="btn" style="background-color: #6c757d;">Back to Manager Dashboard</a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Team Members</h3>
+        <div style="margin-bottom: 15px;">
+            <input type="text" placeholder="Search team members..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        
+        <div style="border: 1px solid #dee2e6; border-radius: 4px;">
+            <div style="padding: 12px; border-bottom: 1px solid #dee2e6; background-color: #f8f9fa;">
+                <strong>John Smith</strong>
+                <span style="float: right; color: #28a745;">Active</span>
+            </div>
+            <div style="padding: 8px 12px; font-size: 14px; color: #6c757d;">
+                Role: Sanitation Worker | Department: Warehouse A
+            </div>
+            
+            <div style="padding: 12px; border-bottom: 1px solid #dee2e6; background-color: #f8f9fa;">
+                <strong>Sarah Johnson</strong>
+                <span style="float: right; color: #28a745;">Active</span>
+            </div>
+            <div style="padding: 8px 12px; font-size: 14px; color: #6c757d;">
+                Role: Sanitation Worker | Department: Warehouse B
+            </div>
+            
+            <div style="padding: 12px; border-bottom: 1px solid #dee2e6; background-color: #f8f9fa;">
+                <strong>Mike Davis</strong>
+                <span style="float: right; color: #ffc107;">On Leave</span>
+            </div>
+            <div style="padding: 8px 12px; font-size: 14px; color: #6c757d;">
+                Role: Team Lead | Department: Warehouse A
+            </div>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <button class="btn" style="background-color: #28a745;">Add Team Member</button>
+        </div>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Team Performance</h3>
+        
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>Checklists Completed Today</span>
+                <strong>12/15</strong>
+            </div>
+            <div style="background-color: #e9ecef; height: 8px; border-radius: 4px;">
+                <div style="background-color: #28a745; height: 8px; width: 80%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>Weekly Target</span>
+                <strong>68/75</strong>
+            </div>
+            <div style="background-color: #e9ecef; height: 8px; border-radius: 4px;">
+                <div style="background-color: #ffc107; height: 8px; width: 90%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>Quality Score</span>
+                <strong>94%</strong>
+            </div>
+            <div style="background-color: #e9ecef; height: 8px; border-radius: 4px;">
+                <div style="background-color: #17a2b8; height: 8px; width: 94%; border-radius: 4px;"></div>
+            </div>
+        </div>
+        
+        <button class="btn" style="background-color: #17a2b8;">View Detailed Report</button>
+    </div>
+    
+</div>
+
+<div style="margin-top: 30px; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h3>Recent Activities</h3>
+    
+    <div style="border-left: 3px solid #d40511; padding-left: 15px; margin-bottom: 15px;">
+        <div style="font-weight: bold;">John Smith completed Warehouse A Morning Checklist</div>
+        <div style="color: #6c757d; font-size: 14px;">2 hours ago</div>
+    </div>
+    
+    <div style="border-left: 3px solid #28a745; padding-left: 15px; margin-bottom: 15px;">
+        <div style="font-weight: bold;">Sarah Johnson validated Equipment Sanitization</div>
+        <div style="color: #6c757d; font-size: 14px;">3 hours ago</div>
+    </div>
+    
+    <div style="border-left: 3px solid #ffc107; padding-left: 15px; margin-bottom: 15px;">
+        <div style="font-weight: bold;">Mike Davis requested schedule change</div>
+        <div style="color: #6c757d; font-size: 14px;">5 hours ago</div>
+    </div>
+    
+    <div style="border-left: 3px solid #17a2b8; padding-left: 15px; margin-bottom: 15px;">
+        <div style="font-weight: bold;">New team member orientation scheduled</div>
+        <div style="color: #6c757d; font-size: 14px;">1 day ago</div>
+    </div>
+</div>
+
+<style>
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d40511;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+</style>

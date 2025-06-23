@@ -1,4 +1,4 @@
-
+ 
 services:
   postgres_db: # Service name for PostgreSQL
     image: postgres:latest # Using PostgreSQL version 15, you can change to :latest or another version
@@ -11,6 +11,7 @@ services:
       - "5432:5432" # Maps port 5432 on your host to port 5432 in the container
     volumes:
       - postgres_db_data:/var/lib/postgresql/data # Persists data outside the container
+      - ./backend/db/init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql
     restart: unless-stopped # Restarts the container unless it was explicitly stopped
 
 volumes:

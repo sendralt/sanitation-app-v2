@@ -1,0 +1,110 @@
+<h2>Create New User</h2>
+
+<form action="/admin/create-user" method="POST" style="max-width: 600px;">
+    
+    <div class="form-group">
+        <label for="username">Username *</label>
+        <input type="text" id="username" name="username" required 
+               placeholder="Enter username (3-30 characters)" 
+               minlength="3" maxlength="30">
+    </div>
+    
+    <div class="form-group">
+        <label for="firstName">First Name *</label>
+        <input type="text" id="firstName" name="firstName" required 
+               placeholder="Enter first name">
+    </div>
+    
+    <div class="form-group">
+        <label for="lastName">Last Name *</label>
+        <input type="text" id="lastName" name="lastName" required 
+               placeholder="Enter last name">
+    </div>
+    
+    <div class="form-group">
+        <label for="password">Password *</label>
+        <input type="password" id="password" name="password" required 
+               placeholder="Enter password (minimum 8 characters)" 
+               minlength="8">
+    </div>
+    
+    <div class="form-group">
+        <label for="role">Role *</label>
+        <select id="role" name="role" required>
+            <option value="">Select a role</option>
+            <option value="user">User</option>
+            <option value="manager">Manager</option>
+            <option value="compliance">Compliance</option>
+            <option value="admin">Admin</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="department">Department</label>
+        <input type="text" id="department" name="department" 
+               placeholder="Enter department (optional)">
+    </div>
+    
+    <div class="form-group">
+        <label for="securityAnswer1">Security Answer 1</label>
+        <input type="text" id="securityAnswer1" name="securityAnswer1" 
+               placeholder="What was your first pet's name?">
+        <small>Default question: What was your first pet's name?</small>
+    </div>
+    
+    <div class="form-group">
+        <label for="securityAnswer2">Security Answer 2</label>
+        <input type="text" id="securityAnswer2" name="securityAnswer2" 
+               placeholder="What was the name of your elementary school?">
+        <small>Default question: What was the name of your elementary school?</small>
+    </div>
+    
+    <div class="form-group">
+        <button type="submit" class="btn">Create User</button>
+        <a href="/admin" class="btn" style="background-color: #6c757d; margin-left: 10px;">Cancel</a>
+    </div>
+</form>
+
+<style>
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 12px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d40511;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    background-color: #b8040f;
+}
+</style>

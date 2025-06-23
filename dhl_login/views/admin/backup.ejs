@@ -1,0 +1,174 @@
+<h2>System Backup</h2>
+
+<div style="margin-bottom: 20px;">
+    <a href="/admin" class="btn" style="background-color: #6c757d;">Back to Admin Dashboard</a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Create Backup</h3>
+        <p>Create a full system backup including database and configuration files.</p>
+        
+        <div style="margin: 20px 0;">
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" checked> Include Database
+            </label>
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" checked> Include User Files
+            </label>
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox"> Include Log Files
+            </label>
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox"> Include Configuration
+            </label>
+        </div>
+        
+        <button class="btn" style="background-color: #28a745; width: 100%;">
+            Create Backup Now
+        </button>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Backup Schedule</h3>
+        <p>Configure automatic backup schedule.</p>
+        
+        <div style="margin: 20px 0;">
+            <label style="display: block; margin-bottom: 10px; font-weight: bold;">Frequency:</label>
+            <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px;">
+                <option value="daily" selected>Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="disabled">Disabled</option>
+            </select>
+            
+            <label style="display: block; margin-bottom: 10px; font-weight: bold;">Time:</label>
+            <input type="time" value="02:00" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px;">
+            
+            <label style="display: block; margin-bottom: 10px; font-weight: bold;">Retention (days):</label>
+            <input type="number" value="30" min="1" max="365" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        
+        <button class="btn" style="background-color: #17a2b8; width: 100%;">
+            Update Schedule
+        </button>
+    </div>
+    
+</div>
+
+<div style="margin-top: 30px; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h3>Recent Backups</h3>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Date</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Type</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Size</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Status</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px;"><%= new Date().toLocaleDateString() %></td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 8px; background-color: #28a745; color: white; border-radius: 4px; font-size: 12px;">
+                            FULL
+                        </span>
+                    </td>
+                    <td style="padding: 12px;">2.3 MB</td>
+                    <td style="padding: 12px;">
+                        <span style="color: #28a745; font-weight: bold;">✓ Complete</span>
+                    </td>
+                    <td style="padding: 12px;">
+                        <a href="#" style="color: #007bff; text-decoration: none; margin-right: 10px;">Download</a>
+                        <a href="#" style="color: #dc3545; text-decoration: none;">Delete</a>
+                    </td>
+                </tr>
+                
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px;"><%= new Date(Date.now() - 86400000).toLocaleDateString() %></td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 8px; background-color: #ffc107; color: #212529; border-radius: 4px; font-size: 12px;">
+                            AUTO
+                        </span>
+                    </td>
+                    <td style="padding: 12px;">2.1 MB</td>
+                    <td style="padding: 12px;">
+                        <span style="color: #28a745; font-weight: bold;">✓ Complete</span>
+                    </td>
+                    <td style="padding: 12px;">
+                        <a href="#" style="color: #007bff; text-decoration: none; margin-right: 10px;">Download</a>
+                        <a href="#" style="color: #dc3545; text-decoration: none;">Delete</a>
+                    </td>
+                </tr>
+                
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px;"><%= new Date(Date.now() - 172800000).toLocaleDateString() %></td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 8px; background-color: #ffc107; color: #212529; border-radius: 4px; font-size: 12px;">
+                            AUTO
+                        </span>
+                    </td>
+                    <td style="padding: 12px;">1.9 MB</td>
+                    <td style="padding: 12px;">
+                        <span style="color: #28a745; font-weight: bold;">✓ Complete</span>
+                    </td>
+                    <td style="padding: 12px;">
+                        <a href="#" style="color: #007bff; text-decoration: none; margin-right: 10px;">Download</a>
+                        <a href="#" style="color: #dc3545; text-decoration: none;">Delete</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px;">
+        <p style="margin: 0; color: #6c757d; font-size: 14px;">
+            <strong>Note:</strong> This is a demo backup interface. 
+            In a production environment, backups would be stored securely and include proper encryption.
+        </p>
+    </div>
+</div>
+
+<style>
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d40511;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+table th {
+    font-weight: 600;
+}
+
+table tr:hover {
+    background-color: #f8f9fa;
+}
+
+a:hover {
+    text-decoration: underline !important;
+}
+
+label {
+    font-weight: normal;
+    cursor: pointer;
+}
+
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+</style>

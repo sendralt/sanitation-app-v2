@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Warehouse Sanitation Checklists</title>
+    <link rel="stylesheet" href="/css/dhl-styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <img src="/css/dhl-logo.svg" alt="DHL Logo" class="logo">
+        <% if(user){ %>
+          <div class="user-info">
+            <span>Hi, <%= user.username %></span>
+            | <a href="/logout-page">Logout</a>
+          </div>
+        <% } %>
+    </nav>
+
+    <div class="container">
+        <% if (success && success.length > 0) { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+        
+        <% if (error && error.length > 0) { %>
+            <div class="alert alert-error">
+                <%= error %>
+            </div>
+        <% } %>
+        
+        <%- body %>
+    </div>
+
+    <div class="footer">
+        &copy; 2025 DHL Supply Chain | Warehouse Sanitation Checklists
+    </div>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<h2>Audit Logs</h2>
+
+<div style="margin-bottom: 20px;">
+    <a href="/admin" class="btn" style="background-color: #6c757d;">Back to Admin Dashboard</a>
+</div>
+
+<div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>System Audit Trail</h3>
+        <div>
+            <select style="padding: 8px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="all">All Events</option>
+                <option value="login">Login Events</option>
+                <option value="user_management">User Management</option>
+                <option value="system">System Events</option>
+                <option value="security">Security Events</option>
+            </select>
+            <button class="btn" style="padding: 8px 16px;">Filter</button>
+        </div>
+    </div>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Timestamp</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Event Type</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">User</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Description</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">IP Address</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sample audit log entries -->
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px;"><%= new Date().toLocaleString() %></td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 8px; background-color: #28a745; color: white; border-radius: 4px; font-size: 12px;">
+                            LOGIN
+                        </span>
+                    </td>
+                    <td style="padding: 12px;"><%= user.username %></td>
+                    <td style="padding: 12px;">User logged in successfully</td>
+                    <td style="padding: 12px;">::1</td>
+                    <td style="padding: 12px;">
+                        <span style="color: #28a745; font-weight: bold;">✓ Success</span>
+                    </td>
+                </tr>
+                
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px;"><%= new Date(Date.now() - 300000).toLocaleString() %></td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 8px; background-color: #17a2b8; color: white; border-radius: 4px; font-size: 12px;">
+                            ADMIN
+                        </span>
+                    </td>
+                    <td style="padding: 12px;"><%= user.username %></td>
+                    <td style="padding: 12px;">Accessed admin dashboard</td>
+                    <td style="padding: 12px;">::1</td>
+                    <td style="padding: 12px;">
+                        <span style="color: #28a745; font-weight: bold;">✓ Success</span>
+                    </td>
+                </tr>
+                
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px;"><%= new Date(Date.now() - 600000).toLocaleString() %></td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 8px; background-color: #ffc107; color: #212529; border-radius: 4px; font-size: 12px;">
+                            SYSTEM
+                        </span>
+                    </td>
+                    <td style="padding: 12px;">System</td>
+                    <td style="padding: 12px;">Database initialization completed</td>
+                    <td style="padding: 12px;">localhost</td>
+                    <td style="padding: 12px;">
+                        <span style="color: #28a745; font-weight: bold;">✓ Success</span>
+                    </td>
+                </tr>
+                
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px;"><%= new Date(Date.now() - 900000).toLocaleString() %></td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 8px; background-color: #6f42c1; color: white; border-radius: 4px; font-size: 12px;">
+                            USER_MGMT
+                        </span>
+                    </td>
+                    <td style="padding: 12px;">admin</td>
+                    <td style="padding: 12px;">Admin user created during initialization</td>
+                    <td style="padding: 12px;">localhost</td>
+                    <td style="padding: 12px;">
+                        <span style="color: #28a745; font-weight: bold;">✓ Success</span>
+                    </td>
+                </tr>
+                
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px;"><%= new Date(Date.now() - 1200000).toLocaleString() %></td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 8px; background-color: #dc3545; color: white; border-radius: 4px; font-size: 12px;">
+                            SECURITY
+                        </span>
+                    </td>
+                    <td style="padding: 12px;">unknown</td>
+                    <td style="padding: 12px;">Failed login attempt</td>
+                    <td style="padding: 12px;">::1</td>
+                    <td style="padding: 12px;">
+                        <span style="color: #dc3545; font-weight: bold;">✗ Failed</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px;">
+        <p style="margin: 0; color: #6c757d; font-size: 14px;">
+            <strong>Note:</strong> This is a demo view showing sample audit log entries. 
+            In a production environment, these would be real audit events stored in the database.
+        </p>
+    </div>
+    
+</div>
+
+<style>
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d40511;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    background-color: #b8040f;
+}
+
+table th {
+    font-weight: 600;
+}
+
+table tr:hover {
+    background-color: #f8f9fa;
+}
+</style>

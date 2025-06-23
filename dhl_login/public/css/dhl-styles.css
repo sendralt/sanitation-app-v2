@@ -36,40 +36,57 @@
   font-display: swap;
 }
 
+:root {
+    --dhl-postyellow: #FFCC00;
+    --dhl-red: #D40511;
+    --dhl-white: #FFFFFF;
+    --dhl-black: #000000;
+    --font-family-base: 'Delivery', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+html, body {
+    height: 100%;
+}
+
 body {
-  font-family: 'Delivery', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: var(--font-family-base);
   margin: 0;
-  background: linear-gradient(to bottom, #FFCC00, white); /* Light grey background for the page */
-  color: #333333; /* Default text color */
+  background: linear-gradient(to bottom, var(--dhl-postyellow), var(--dhl-white));
+  color: var(--dhl-black);
+  display: flex;
+  flex-direction: column;
 }
 
-.page-container { /* Generic container, can be used by login, create-user etc. */
-  max-width: 450px; /* Default max-width */
-  margin: 4rem auto;
-  padding: 2rem;
-  background-color: lightgoldenrodyellow; /* background for the content card */
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+.container {
+    flex: 1 0 auto;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.login-container { /* Specific for login if different sizing is needed */
-  max-width: 450px; /* Narrower for login forms */
-  margin: 4rem auto; /* More vertical margin for centered feel */
-  margin-bottom: 11rem;
-  padding: 2.5rem;
-  background-color: lightgoldenrodyellow;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.content {
+    background-color: var(--dhl-white);
+    padding: 2rem;
+    margin: 2rem 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.dashboard-container { /* For dashboard specific layouts */
+/* DEPRECATED old containers - Use .content for main content areas */
+.page-container, .login-container, .dashboard-container {
   max-width: 450px;
   margin: 4rem auto;
-  margin-bottom: 11rem;
   padding: 2.5rem;
-  background-color: lightgoldenrodyellow;;
+  background-color: var(--dhl-white);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Center the login form vertically */
+.login-container {
+    margin: auto;
 }
 
 .page-header, .dashboard-header, .login-header, .reset-header  { /* Common header styling */
@@ -95,6 +112,7 @@ body {
 .login-header { /* Specific adjustments for login header if needed */
   justify-content: center; /* Center logo and title in login */
   flex-direction: column; /* Stack logo and title */
+  align-items: center;
 }
 .login-header .logo {
   margin-right: 0;
@@ -158,23 +176,23 @@ body {
 }
 
 .btn-primary {
-  background-color: #e6b800; /* DHL Yellow */
-  color: #333333; /* Dark text for good contrast on yellow */
+  background-color: var(--dhl-red); /* CHANGED */
+  color: var(--dhl-white);          /* CHANGED */
 }
 
 .btn-primary:hover {
-  background-color: #b8040f;
-  color: white;
+  background-color: #b8040f; /* Darker red on hover */
+  color: var(--dhl-white);
 }
 
 .btn-secondary {
-  background-color: #e6b800; /* DHL Red */
-  color: #333333; /* White text for good contrast on red */
+  background-color: var(--dhl-postyellow); /* CHANGED */
+  color: var(--dhl-black);               /* CHANGED */
 }
 
 .btn-secondary:hover {
-  background-color: #b8040f; /* Darker red on hover */
-  color: white;
+  background-color: #e6b800; /* A slightly darker yellow */
+  color: var(--dhl-black);
 }
 
 .admin-actions {
@@ -241,15 +259,15 @@ body {
 .form-group input[type="text"]:focus,
 .form-group input[type="password"]:focus,
 .form-group input[type="email"]:focus {
-  border-color: #FFCC00; /* DHL Yellow for focus */
+  border-color: var(--dhl-postyellow);
   outline: none;
   box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.3);
 }
 
 .error-message, .flash-message { /* General purpose message styling */
-  color: #D40511; /* DHL Red for errors */
+  color: var(--dhl-red); /* DHL Red for errors */
   background-color: #fdecea; /* Light red background */
-  border: 1px solid #D40511;
+  border: 1px solid var(--dhl-red);
   padding: 0.75rem 1rem;
   border-radius: 4px;
   margin-bottom: 1.5rem;
@@ -273,7 +291,7 @@ body {
   width: 100%;
   margin-top: .25rem;
   font-size: .875em;
-  color: #D40511; /* DHL Red for errors */
+  color: var(--dhl-red);
 }
 
 .form-control.is-invalid ~ .invalid-feedback,
@@ -287,7 +305,7 @@ body {
 .form-select.is-invalid,
 .was-validated .form-control:invalid,
 .was-validated .form-select:invalid {
-  border-color: #D40511;
+  border-color: var(--dhl-red);
 }
 /* Add .is-valid styling if needed */
 .form-control.is-valid,
@@ -362,14 +380,14 @@ body {
 }
 /* Navbar Styles */
 .navbar {
-  background: #FFCC00; /* DHL Yellow */
-  padding: 0.8rem 1rem;
+  background: var(--dhl-postyellow);
+  padding: 0.8rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
   box-sizing: border-box;
-  /*border-bottom: 1px solid #D40511; */ /* DHL Red accent border */
+  flex-shrink: 0;
 }
 
 .navbar .logo { /* Specific selector for navbar logo if different from page-header logo */
@@ -378,8 +396,26 @@ body {
 }
 
 .navbar .user-info {
-  color: #333333; /* Dark text on yellow background */
+  color: var(--dhl-black);
   font-weight: 500;
+}
+
+.forgot-password-link {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.forgot-password-link a {
+  color: var(--dhl-red);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: #666;
 }
 
 .navbar .user-info span {
@@ -387,7 +423,7 @@ body {
 }
 
 .navbar .user-info a {
-  color: #D40511; /* DHL Red for links */
+  color: var(--dhl-red);
   text-decoration: none;
   font-weight: 500;
 }
@@ -396,10 +432,11 @@ body {
   text-decoration: underline;
 }
 
-/* Ensure body background from main.ejs is also applied if it was specific */
-/* The body background is now #f4f5f7 from the general body style,
-   the old main.ejs had body background: #FFCC00.
-   If the entire page background (outside containers) should be yellow,
-   we can override it here or adjust the body style.
-   For now, sticking to #f4f5f7 for the page and #FFCC00 for navbar.
-*/
+.footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: #666;
+    padding: 1rem;
+    flex-shrink: 0;
+}

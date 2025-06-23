@@ -1,0 +1,115 @@
+<h2>System Settings</h2>
+
+<div style="margin-bottom: 20px;">
+    <a href="/admin" class="btn" style="background-color: #6c757d;">Back to Admin Dashboard</a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Security Settings</h3>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Session Timeout:</strong></label>
+            <p>Current: 1 hour</p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Password Policy:</strong></label>
+            <p>Minimum 8 characters required</p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label><strong>SSL/HTTPS:</strong></label>
+            <p>Status: <span style="color: #dc3545;">Disabled</span></p>
+        </div>
+        <button class="btn" style="background-color: #28a745;">Update Security Settings</button>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Database Settings</h3>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Database Type:</strong></label>
+            <p>SQLite (Development)</p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Backup Schedule:</strong></label>
+            <p>Daily at 2:00 AM</p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Auto-cleanup:</strong></label>
+            <p>Enabled (30 days)</p>
+        </div>
+        <button class="btn" style="background-color: #17a2b8;">Database Management</button>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Application Settings</h3>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Environment:</strong></label>
+            <p>Development</p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Debug Mode:</strong></label>
+            <p>Enabled</p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label><strong>API Rate Limiting:</strong></label>
+            <p>100 requests/minute</p>
+        </div>
+        <button class="btn" style="background-color: #ffc107; color: #212529;">Update App Settings</button>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Email Settings</h3>
+        <div style="margin-bottom: 15px;">
+            <label><strong>SMTP Server:</strong></label>
+            <p>Not configured</p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Email Notifications:</strong></label>
+            <p>Disabled</p>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label><strong>Admin Email:</strong></label>
+            <p>Not set</p>
+        </div>
+        <button class="btn" style="background-color: #6f42c1;">Configure Email</button>
+    </div>
+    
+</div>
+
+<div style="margin-top: 30px; padding: 20px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;">
+    <h4 style="color: #856404; margin-top: 0;">⚠️ Configuration Notice</h4>
+    <p style="color: #856404; margin-bottom: 0;">
+        These settings are currently read-only in this demo version. 
+        In a production environment, these would be configurable through environment variables and admin interface.
+    </p>
+</div>
+
+<style>
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d40511;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    text-align: center;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+label {
+    font-weight: 600;
+    color: #495057;
+}
+
+p {
+    margin: 5px 0 0 0;
+    color: #6c757d;
+}
+</style>

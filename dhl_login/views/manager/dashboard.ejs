@@ -1,0 +1,46 @@
+<h2>Manager Dashboard</h2>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #d40511;">
+        <h3>Team Management</h3>
+        <p>Manage your team members and their assignments.</p>
+        <a href="/manager/team" class="btn">Manage Team</a>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745;">
+        <h3>Reports</h3>
+        <p>View team performance and checklist completion reports.</p>
+        <a href="/manager/reports" class="btn">View Reports</a>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+        <h3>Checklist Validation</h3>
+        <p>Review and validate submitted checklists.</p>
+        <a href="/manager/validate" class="btn">Validate Checklists</a>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+        <h3>Schedule Management</h3>
+        <p>Manage cleaning schedules and assignments.</p>
+        <a href="/manager/schedules" class="btn">Manage Schedules</a>
+    </div>
+    
+</div>
+
+<div style="margin-top: 30px;">
+    <h3>Quick Actions</h3>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="/app" class="btn">New Checklist</a>
+        <a href="/manager/assign-task" class="btn">Assign Task</a>
+        <a href="/dashboard" class="btn" style="background-color: #6c757d;">Back to Dashboard</a>
+    </div>
+</div>
+
+<div style="margin-top: 30px; padding: 20px; background: #e9ecef; border-radius: 8px;">
+    <h4>Team Overview</h4>
+    <p><strong>Team Members:</strong> Loading...</p>
+    <p><strong>Pending Validations:</strong> Loading...</p>
+    <p><strong>Completed Today:</strong> Loading...</p>
+    <p><strong>Overdue Tasks:</strong> Loading...</p>
+</div>

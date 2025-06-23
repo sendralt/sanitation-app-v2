@@ -1,0 +1,226 @@
+<h2>Assign Task</h2>
+
+<div style="margin-bottom: 20px;">
+    <a href="/manager" class="btn" style="background-color: #6c757d;">Back to Manager Dashboard</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3>Create New Task Assignment</h3>
+        
+        <form style="margin-top: 20px;">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Task Type</label>
+                <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Select task type</option>
+                    <option value="daily-clean">Daily Cleaning</option>
+                    <option value="deep-clean">Deep Cleaning</option>
+                    <option value="equipment-check">Equipment Check</option>
+                    <option value="temperature-log">Temperature Logging</option>
+                    <option value="inventory-clean">Inventory Area Cleaning</option>
+                    <option value="emergency-clean">Emergency Cleaning</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Area/Location</label>
+                <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Select area</option>
+                    <option value="warehouse-a">Warehouse A</option>
+                    <option value="warehouse-b">Warehouse B</option>
+                    <option value="loading-dock">Loading Dock</option>
+                    <option value="cold-storage">Cold Storage</option>
+                    <option value="office-area">Office Area</option>
+                    <option value="equipment-room">Equipment Room</option>
+                    <option value="break-room">Break Room</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Assign To</label>
+                <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Select team member</option>
+                    <option value="john-smith">John Smith</option>
+                    <option value="sarah-johnson">Sarah Johnson</option>
+                    <option value="mike-davis">Mike Davis</option>
+                    <option value="lisa-wilson">Lisa Wilson</option>
+                    <option value="tom-brown">Tom Brown</option>
+                    <option value="alex-rodriguez">Alex Rodriguez</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Priority</label>
+                <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Due Date</label>
+                <input type="date" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" value="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Due Time</label>
+                <input type="time" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" value="17:00">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Special Instructions</label>
+                <textarea style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; height: 100px; resize: vertical;" placeholder="Enter any special instructions or notes for this task..."></textarea>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center;">
+                    <input type="checkbox" style="margin-right: 8px;">
+                    <span>Send notification to assigned worker</span>
+                </label>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center;">
+                    <input type="checkbox" style="margin-right: 8px;">
+                    <span>Require photo documentation</span>
+                </label>
+            </div>
+            
+            <div>
+                <button type="submit" class="btn" style="background-color: #28a745; margin-right: 10px;">Assign Task</button>
+                <button type="button" class="btn" style="background-color: #6c757d;">Save as Draft</button>
+            </div>
+        </form>
+    </div>
+    
+    <div>
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+            <h3>Recent Assignments</h3>
+            
+            <div style="border-bottom: 1px solid #dee2e6; padding-bottom: 15px; margin-bottom: 15px;">
+                <div style="font-weight: bold;">Warehouse A Deep Clean</div>
+                <div style="color: #6c757d; font-size: 14px;">Assigned to: John Smith</div>
+                <div style="color: #6c757d; font-size: 14px;">Due: Today 5:00 PM</div>
+                <div style="margin-top: 5px;">
+                    <span style="padding: 4px 8px; background-color: #ffc107; color: #212529; border-radius: 4px; font-size: 12px;">
+                        In Progress
+                    </span>
+                </div>
+            </div>
+            
+            <div style="border-bottom: 1px solid #dee2e6; padding-bottom: 15px; margin-bottom: 15px;">
+                <div style="font-weight: bold;">Equipment Sanitization</div>
+                <div style="color: #6c757d; font-size: 14px;">Assigned to: Sarah Johnson</div>
+                <div style="color: #6c757d; font-size: 14px;">Due: Tomorrow 9:00 AM</div>
+                <div style="margin-top: 5px;">
+                    <span style="padding: 4px 8px; background-color: #17a2b8; color: white; border-radius: 4px; font-size: 12px;">
+                        Assigned
+                    </span>
+                </div>
+            </div>
+            
+            <div style="border-bottom: 1px solid #dee2e6; padding-bottom: 15px; margin-bottom: 15px;">
+                <div style="font-weight: bold;">Cold Storage Temperature Check</div>
+                <div style="color: #6c757d; font-size: 14px;">Assigned to: Mike Davis</div>
+                <div style="color: #6c757d; font-size: 14px;">Due: Today 3:00 PM</div>
+                <div style="margin-top: 5px;">
+                    <span style="padding: 4px 8px; background-color: #28a745; color: white; border-radius: 4px; font-size: 12px;">
+                        Completed
+                    </span>
+                </div>
+            </div>
+            
+            <div>
+                <div style="font-weight: bold;">Loading Dock Cleaning</div>
+                <div style="color: #6c757d; font-size: 14px;">Assigned to: Lisa Wilson</div>
+                <div style="color: #6c757d; font-size: 14px;">Due: Yesterday 6:00 PM</div>
+                <div style="margin-top: 5px;">
+                    <span style="padding: 4px 8px; background-color: #dc3545; color: white; border-radius: 4px; font-size: 12px;">
+                        Overdue
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3>Team Availability</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><strong>John Smith</strong></span>
+                    <span style="color: #28a745; font-weight: bold;">Available</span>
+                </div>
+                <div style="color: #6c757d; font-size: 14px;">Current: 1 active task</div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><strong>Sarah Johnson</strong></span>
+                    <span style="color: #ffc107; font-weight: bold;">Busy</span>
+                </div>
+                <div style="color: #6c757d; font-size: 14px;">Current: 2 active tasks</div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><strong>Mike Davis</strong></span>
+                    <span style="color: #28a745; font-weight: bold;">Available</span>
+                </div>
+                <div style="color: #6c757d; font-size: 14px;">Current: 0 active tasks</div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><strong>Lisa Wilson</strong></span>
+                    <span style="color: #dc3545; font-weight: bold;">Overloaded</span>
+                </div>
+                <div style="color: #6c757d; font-size: 14px;">Current: 3 active tasks (1 overdue)</div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><strong>Tom Brown</strong></span>
+                    <span style="color: #6c757d; font-weight: bold;">Off Duty</span>
+                </div>
+                <div style="color: #6c757d; font-size: 14px;">Shift ends at 2:00 PM</div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<style>
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d40511;
+    color: white;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+label {
+    font-weight: normal;
+    cursor: pointer;
+}
+
+input, select, textarea {
+    font-family: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #d40511;
+    box-shadow: 0 0 0 2px rgba(212, 5, 17, 0.2);
+}
+</style>

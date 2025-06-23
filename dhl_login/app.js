@@ -177,7 +177,15 @@ app.get('/', (req, res) => {
   res.redirect('/login-page');
 });
 
-app.get('/login-page', lusca.csrf(), (req, res) => {
+const redirectIfAuthenticated = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    console.log('[redirectIfAuthenticated] User is already authenticated. Redirecting to /dashboard.');
+    return res.redirect('/dashboard');
+  }
+  next();
+};
+
+app.get('/login-page', lusca.csrf(), redirectIfAuthenticated, (req, res) => {
   console.log(`[GET /login-page] Arrived at login page`);
   console.log(`[GET /login-page] Session ID: ${req.sessionID}`);
   console.log(`[GET /login-page] returnTo in session: ${req.session.returnTo}`);
@@ -185,7 +193,7 @@ app.get('/login-page', lusca.csrf(), (req, res) => {
   console.log(`[GET /login-page] User authenticated: ${req.isAuthenticated()}`);
 
   // Ensure 'login' is the correct name of your EJS template for the login page
-  res.render('login', { title: 'Login', user: req.user, _csrf: req.csrfToken() });
+  res.render('login', { title: 'Login', user: req.user, _csrf: req.csrfToken(), layout: 'layouts/login_layout' });
 });
 
 app.post('/login-page', lusca.csrf(), (req, res, next) => {
@@ -244,8 +252,12 @@ app.get('/logout-page', (req, res, next) => {
     if (err) {
       return next(err);
     }
-    req.flash('success', 'You have successfully logged out.');
-    res.redirect('/login-page');
+    req.session.destroy((err) => {
+      if (err) {
+        return next(err);
+      }
+      res.redirect('/login-page');
+    });
   });
 });
 
@@ -340,6 +352,11 @@ app.get('/health/database', async (req, res) => {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
+});
+
+// Test route to verify server is working
+app.get('/test-server', (req, res) => {
+  res.send('Frontend server is working!');
 });
 
 // --- Error handling middleware (must be last) ---
